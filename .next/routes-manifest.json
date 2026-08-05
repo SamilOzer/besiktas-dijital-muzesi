@@ -1,0 +1,153 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/admin/ansiklopedi",
+      "regex": "^/admin/ansiklopedi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/ansiklopedi(?:/)?$"
+    },
+    {
+      "page": "/admin/ayarlar",
+      "regex": "^/admin/ayarlar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/ayarlar(?:/)?$"
+    },
+    {
+      "page": "/admin/katkidar",
+      "regex": "^/admin/katkidar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/katkidar(?:/)?$"
+    },
+    {
+      "page": "/admin/kullanicilar",
+      "regex": "^/admin/kullanicilar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/kullanicilar(?:/)?$"
+    },
+    {
+      "page": "/admin/login",
+      "regex": "^/admin/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/login(?:/)?$"
+    },
+    {
+      "page": "/admin/mekanlar",
+      "regex": "^/admin/mekanlar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/mekanlar(?:/)?$"
+    },
+    {
+      "page": "/admin/mesajlar",
+      "regex": "^/admin/mesajlar(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/mesajlar(?:/)?$"
+    },
+    {
+      "page": "/ansiklopedi",
+      "regex": "^/ansiklopedi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/ansiklopedi(?:/)?$"
+    },
+    {
+      "page": "/api/admin/login",
+      "regex": "^/api/admin/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/login(?:/)?$"
+    },
+    {
+      "page": "/api/admin/logout",
+      "regex": "^/api/admin/logout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/logout(?:/)?$"
+    },
+    {
+      "page": "/hakkimizda",
+      "regex": "^/hakkimizda(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/hakkimizda(?:/)?$"
+    },
+    {
+      "page": "/harita",
+      "regex": "^/harita(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/harita(?:/)?$"
+    },
+    {
+      "page": "/iletisim",
+      "regex": "^/iletisim(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/iletisim(?:/)?$"
+    },
+    {
+      "page": "/katkida-bulun",
+      "regex": "^/katkida\\-bulun(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/katkida\\-bulun(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

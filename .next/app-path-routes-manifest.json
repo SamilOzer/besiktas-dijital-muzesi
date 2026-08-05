@@ -1,0 +1,20 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/ansiklopedi/page": "/admin/ansiklopedi",
+  "/admin/ayarlar/page": "/admin/ayarlar",
+  "/admin/katkidar/page": "/admin/katkidar",
+  "/admin/kullanicilar/page": "/admin/kullanicilar",
+  "/admin/login/page": "/admin/login",
+  "/admin/mekanlar/page": "/admin/mekanlar",
+  "/admin/mesajlar/page": "/admin/mesajlar",
+  "/admin/page": "/admin",
+  "/ansiklopedi/page": "/ansiklopedi",
+  "/api/admin/login/route": "/api/admin/login",
+  "/api/admin/logout/route": "/api/admin/logout",
+  "/hakkimizda/page": "/hakkimizda",
+  "/harita/page": "/harita",
+  "/iletisim/page": "/iletisim",
+  "/katkida-bulun/page": "/katkida-bulun",
+  "/page": "/"
+}
