@@ -3,7 +3,7 @@
 
 import { besiktasPinData, PinLocation } from "@/data/besiktasPinData";
 import { ansiklopediData, HistoricalEvent } from "@/data/ansiklopediData";
-import { savePinToDb, deletePinFromDb } from "./db-service";
+import { savePinToDb, deletePinFromDb, saveOlayToDb, deleteOlayFromDb, fetchOlaylarFromDb, fetchPinsFromDb } from "./db-service";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type UserRole = "admin" | "editor" | "viewer";
@@ -81,6 +81,18 @@ updateCategoryStats();
 // ─── Mekan CRUD ───────────────────────────────────────────────────────────────
 export const getMekanlar = () => [...mekanlar];
 
+export const fetchMekanlar = async (): Promise<PinLocation[]> => {
+  try {
+    const dbMekanlar = await fetchPinsFromDb();
+    if (dbMekanlar && dbMekanlar.length > 0) {
+      mekanlar = dbMekanlar;
+    }
+  } catch (err) {
+    console.error("Error fetching mekanlar from database:", err);
+  }
+  return [...mekanlar];
+};
+
 export const addMekan = (item: PinLocation) => {
   mekanlar = [...mekanlar, item];
   updateCategoryStats();
@@ -108,18 +120,37 @@ export const deleteMekan = (id: string) => {
 // ─── Ansiklopedi CRUD ─────────────────────────────────────────────────────────
 export const getOlaylar = () => [...olaylar];
 
+export const fetchOlaylar = async (): Promise<HistoricalEvent[]> => {
+  try {
+    const dbOlaylar = await fetchOlaylarFromDb();
+    if (dbOlaylar && dbOlaylar.length > 0) {
+      olaylar = dbOlaylar;
+    }
+  } catch (err) {
+    console.error("Error fetching olaylar from database:", err);
+  }
+  return [...olaylar];
+};
+
 export const addOlay = (item: HistoricalEvent) => {
   olaylar = [...olaylar, item];
+  // Async background sync with Supabase
+  saveOlayToDb(item).catch((err: any) => console.error("Error saving olay to database:", err));
   return item;
 };
 
 export const updateOlay = (id: string, updates: Partial<HistoricalEvent>) => {
   olaylar = olaylar.map((o) => (o.id === id ? { ...o, ...updates } : o));
-  return olaylar.find((o) => o.id === id) ?? null;
+  const updated = olaylar.find((o) => o.id === id) ?? null;
+  if (updated) {
+    saveOlayToDb(updated).catch((err: any) => console.error("Error updating olay in database:", err));
+  }
+  return updated;
 };
 
 export const deleteOlay = (id: string) => {
   olaylar = olaylar.filter((o) => o.id !== id);
+  deleteOlayFromDb(id).catch((err: any) => console.error("Error deleting olay from database:", err));
 };
 
 // ─── User CRUD ────────────────────────────────────────────────────────────────

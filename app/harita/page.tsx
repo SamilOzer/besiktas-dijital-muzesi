@@ -1,9 +1,10 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import LandmarkModal from "@/components/Map/LandmarkModal";
 import MapFilterPanel from "@/components/Map/MapFilterPanel";
-import { besiktasPinData, PinLocation } from "@/data/besiktasPinData";
+import { PinLocation } from "@/data/besiktasPinData";
+import { fetchPinsFromDb } from "@/lib/db-service";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 // Leaflet must be client-only
@@ -18,15 +19,34 @@ export default function HaritaPage() {
   const [selectedNeighborhood,setSelectedNeighborhood]= useState("all");
   const [activePin,           setActivePin]           = useState<PinLocation | null>(null);
   const [sidebarOpen,         setSidebarOpen]         = useState(true);
+  const [pins,                setPins]                = useState<PinLocation[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadPins = async () => {
+      try {
+        const data = await fetchPinsFromDb();
+        if (isMounted) {
+          setPins(data);
+        }
+      } catch (e) {
+        console.error("Error loading pins:", e);
+      }
+    };
+    loadPins();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredPins = useMemo(() => {
-    return besiktasPinData.filter((pin) => {
+    return pins.filter((pin) => {
       const catOk   = selectedCategory    === "all" || pin.category    === selectedCategory;
       const timeOk  = selectedTimePeriod  === "all" || pin.timePeriod  === selectedTimePeriod;
       const neighOk = selectedNeighborhood=== "all" || pin.neighborhood=== selectedNeighborhood;
       return catOk && timeOk && neighOk;
     });
-  }, [selectedCategory, selectedTimePeriod, selectedNeighborhood]);
+  }, [selectedCategory, selectedTimePeriod, selectedNeighborhood, pins]);
 
   const handleReset = () => {
     setSelectedCategory("all");

@@ -17,7 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 import { DataTable, Column } from '@/components/admin/DataTable';
 import { DeleteDialog } from '@/components/admin/DeleteDialog';
-import { getMekanlar, addMekan, updateMekan, deleteMekan } from '@/lib/admin-store';
+import { getMekanlar, fetchMekanlar, addMekan, updateMekan, deleteMekan } from '@/lib/admin-store';
 import { PinLocation } from '@/data/besiktasPinData';
 import ImageUploadInput from '@/components/ImageUploadInput';
 
@@ -42,7 +42,17 @@ export default function MekanlarPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    setMekanlar(getMekanlar());
+    let isMounted = true;
+    const loadMekanlar = async () => {
+      const data = await fetchMekanlar();
+      if (isMounted) {
+        setMekanlar(data);
+      }
+    };
+    loadMekanlar();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<MekanFormData>({

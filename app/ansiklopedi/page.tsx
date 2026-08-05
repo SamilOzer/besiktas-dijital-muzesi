@@ -1,7 +1,8 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { X, Search, BookOpen, MapPin, Calendar, Share2 } from "lucide-react";
-import { ansiklopediData, HistoricalEvent, EventCategory } from "@/data/ansiklopediData";
+import { HistoricalEvent, EventCategory } from "@/data/ansiklopediData";
+import { fetchOlaylarFromDb } from "@/lib/db-service";
 
 const CATEGORIES: { id: string; label: string; emoji: string }[] = [
   { id: "all",       label: "Tümü",              emoji: "📚" },
@@ -149,9 +150,33 @@ export default function AnsiklopediPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeEvent, setActiveEvent] = useState<HistoricalEvent | null>(null);
+  const [events, setEvents] = useState<HistoricalEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadEvents = async () => {
+      try {
+        const data = await fetchOlaylarFromDb();
+        if (isMounted) {
+          setEvents(data);
+        }
+      } catch (e) {
+        console.error("Error loading events:", e);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    loadEvents();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
-    return ansiklopediData.filter((e) => {
+    return events.filter((e) => {
       const matchCat = selectedCategory === "all" || e.category === selectedCategory;
       const q = searchQuery.toLowerCase();
       const matchSearch =
@@ -162,7 +187,7 @@ export default function AnsiklopediPage() {
         e.era.toLowerCase().includes(q);
       return matchCat && matchSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, events]);
 
   return (
     <main className="min-h-screen pt-28 pb-24 px-6 md:px-[8vw]">

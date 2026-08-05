@@ -17,7 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 import { DataTable, Column } from '@/components/admin/DataTable';
 import { DeleteDialog } from '@/components/admin/DeleteDialog';
-import { getOlaylar, addOlay, updateOlay, deleteOlay } from '@/lib/admin-store';
+import { getOlaylar, fetchOlaylar, addOlay, updateOlay, deleteOlay } from '@/lib/admin-store';
 import { HistoricalEvent, EventCategory } from '@/data/ansiklopediData';
 import ImageUploadInput from '@/components/ImageUploadInput';
 
@@ -41,7 +41,17 @@ export default function AnsiklopediPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    setOlaylar(getOlaylar());
+    let isMounted = true;
+    const loadOlaylar = async () => {
+      const data = await fetchOlaylar();
+      if (isMounted) {
+        setOlaylar(data);
+      }
+    };
+    loadOlaylar();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<OlayFormData>({

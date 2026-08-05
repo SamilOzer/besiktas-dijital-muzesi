@@ -1,7 +1,9 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { besiktasPinData, PinLocation } from '@/data/besiktasPinData';
+import { ansiklopediData, HistoricalEvent } from '@/data/ansiklopediData';
 
 const LOCAL_STORAGE_KEY = 'besiktas_mekanlar_db';
+const LOCAL_STORAGE_OLAYLAR_KEY = 'besiktas_olaylar_db';
 
 // Helper to get local data
 const getLocalMekanlar = (): PinLocation[] => {
@@ -27,6 +29,29 @@ const saveLocalMekanlar = (items: PinLocation[]) => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
   } catch (error) {
     console.error('Failed to save to local storage', error);
+  }
+};
+
+// Helper to get local olaylar
+const getLocalOlaylar = (): HistoricalEvent[] => {
+  if (typeof window === 'undefined') return [...ansiklopediData];
+  try {
+    const data = localStorage.getItem(LOCAL_STORAGE_OLAYLAR_KEY);
+    if (!data) return [...ansiklopediData];
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Failed to parse local storage olaylar', error);
+    return [...ansiklopediData];
+  }
+};
+
+// Helper to save local olaylar
+const saveLocalOlaylar = (items: HistoricalEvent[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LOCAL_STORAGE_OLAYLAR_KEY, JSON.stringify(items));
+  } catch (error) {
+    console.error('Failed to save to local storage olaylar', error);
   }
 };
 
@@ -140,6 +165,111 @@ export const deletePinFromDb = async (id: string): Promise<void> => {
       }
     } catch (e) {
       console.error('Network error during Supabase delete:', e);
+    }
+  }
+};
+
+/**
+ * Fetches all ansiklopedi olaylar from Supabase if configured.
+ * Otherwise, falls back to browser localStorage.
+ */
+export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('olaylar')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase fetch olaylar error, falling back to local storage:', error.message);
+        return getLocalOlaylar();
+      }
+
+      if (data && data.length > 0) {
+        const olaylar = data.map((item: any) => ({
+          ...item,
+          tags: Array.isArray(item.tags) ? item.tags : [],
+          images: Array.isArray(item.images) ? item.images : [],
+        })) as HistoricalEvent[];
+        
+        saveLocalOlaylar(olaylar);
+        return olaylar;
+      }
+      return getLocalOlaylar();
+    } catch (e) {
+      console.warn('Network error fetching olaylar, falling back to local storage:', e);
+      return getLocalOlaylar();
+    }
+  }
+  return getLocalOlaylar();
+};
+
+/**
+ * Saves (inserts or updates) an olay in Supabase if configured.
+ * Also persists changes in local storage.
+ */
+export const saveOlayToDb = async (olay: HistoricalEvent): Promise<HistoricalEvent> => {
+  const localList = getLocalOlaylar();
+  const index = localList.findIndex((item) => item.id === olay.id);
+  if (index !== -1) {
+    localList[index] = olay;
+  } else {
+    localList.push(olay);
+  }
+  saveLocalOlaylar(localList);
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('olaylar')
+        .upsert({
+          id: olay.id,
+          title: olay.title,
+          date: olay.date,
+          era: olay.era,
+          category: olay.category,
+          categoryLabel: olay.categoryLabel,
+          summary: olay.summary,
+          fullText: olay.fullText || null,
+          description: olay.description || null,
+          location: olay.location || null,
+          image: olay.image || null,
+          images: olay.images || [],
+          tags: olay.tags || []
+        });
+
+      if (error) {
+        console.error('Supabase upsert olay error:', error.message);
+      }
+    } catch (e) {
+      console.error('Network error during Supabase upsert olay:', e);
+    }
+  }
+
+  return olay;
+};
+
+/**
+ * Deletes an olay from Supabase if configured.
+ * Also removes from local storage.
+ */
+export const deleteOlayFromDb = async (id: string): Promise<void> => {
+  const localList = getLocalOlaylar().filter((item) => item.id !== id);
+  saveLocalOlaylar(localList);
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('olaylar')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Supabase delete olay error:', error.message);
+      }
+    } catch (e) {
+      console.error('Network error during Supabase delete olay:', e);
     }
   }
 };
