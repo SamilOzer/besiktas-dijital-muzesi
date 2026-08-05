@@ -1,0 +1,525 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0d0e12;
+  --panel: #14161d;
+  --ink: #f3f4f6;
+  --muted: #9ca3af;
+  --accent: #c5a059;
+  --besiktas-red: #e11d48;
+  --header-h: 72px;
+}
+
+/* ─── Admin Panel CSS Variables ────────────────────
+   Scoped to .admin-root so they NEVER affect the museum site.
+   Uses --a-* prefix to avoid any conflict with --accent, --muted, etc.
+──────────────────────────────────────────────────── */
+.admin-root.admin-light {
+  --a-bg:       #f1f5f9;
+  --a-surface:  #ffffff;
+  --a-text:     #0f172a;
+  --a-muted:    #64748b;
+  --a-border:   #e2e8f0;
+  --a-sidebar:  #1e293b;
+  --a-primary:  #1e293b;
+  --a-accent:   #c5a059;
+  color-scheme: light;
+}
+
+.admin-root.admin-dark {
+  --a-bg:       #0f172a;
+  --a-surface:  #1e293b;
+  --a-text:     #f1f5f9;
+  --a-muted:    #94a3b8;
+  --a-border:   #334155;
+  --a-sidebar:  #0f172a;
+  --a-primary:  #c5a059;
+  --a-accent:   #c5a059;
+  color-scheme: dark;
+}
+
+/* Ensure admin panel has its own font rendering */
+.admin-root {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Radix UI Animation Utilities ─────────────────
+   Required by Dialog, AlertDialog, DropdownMenu, Tooltip
+──────────────────────────────────────────────────── */
+@keyframes fade-in-0 {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fade-out-0 {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes zoom-in-95 {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes zoom-out-95 {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.95); }
+}
+@keyframes slide-in-from-top-2 {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes slide-in-from-bottom-2 {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+/* Tailwind animate-in / animate-out helpers for Radix */
+.animate-in  { animation-fill-mode: both; }
+.animate-out { animation-fill-mode: both; }
+.data-\[state\=open\]\:animate-in[data-state="open"]   { animation-name: fade-in-0; animation-duration: 150ms; }
+.data-\[state\=closed\]\:animate-out[data-state="closed"] { animation-name: fade-out-0; animation-duration: 150ms; }
+.data-\[state\=open\]\:fade-in-0[data-state="open"]   { animation-name: fade-in-0;  animation-duration: 150ms; }
+.data-\[state\=closed\]\:fade-out-0[data-state="closed"] { animation-name: fade-out-0; animation-duration: 150ms; }
+.data-\[state\=open\]\:zoom-in-95[data-state="open"]  { animation-name: zoom-in-95;  animation-duration: 200ms; }
+.data-\[state\=closed\]\:zoom-out-95[data-state="closed"] { animation-name: zoom-out-95; animation-duration: 150ms; }
+.data-\[side\=bottom\]\:slide-in-from-top-2[data-side="bottom"]       { animation-name: slide-in-from-top-2;    animation-duration: 200ms; }
+.data-\[side\=top\]\:slide-in-from-bottom-2[data-side="top"]          { animation-name: slide-in-from-bottom-2; animation-duration: 200ms; }
+.duration-200 { animation-duration: 200ms; }
+
+/* ─── Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: auto;
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ─── Typography ───────────────────────────────── */
+.headline {
+  font-size: clamp(52px, 9vw, 140px);
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+
+.headline-md {
+  font-size: clamp(40px, 7vw, 100px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+
+.eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ─── CTA Button ───────────────────────────────── */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #0d0e12;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(197, 160, 89, 0.4);
+  background: #d4b26a;
+}
+
+.cta-outline {
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+}
+
+.cta-outline:hover {
+  background: var(--accent);
+  color: #0d0e12;
+}
+
+/* ─── Homepage layout ──────────────────────────── */
+.scene-fixed {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.section-stack {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Glassmorphism ────────────────────────────── */
+.glass {
+  background: rgba(20, 22, 29, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Accent gradient text ─────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, #e8d0a0 50%, var(--accent) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+}
+
+/* ─── Leaflet overrides ────────────────────────── */
+.leaflet-container {
+  background: #0d0e12 !important;
+  font-family: 'Inter', sans-serif;
+  /* Keep Leaflet below our header */
+  z-index: 0 !important;
+}
+
+/* Ensure leaflet map panes never exceed header z-index */
+.leaflet-pane,
+.leaflet-tile-container,
+.leaflet-overlay-pane,
+.leaflet-shadow-pane,
+.leaflet-marker-pane,
+.leaflet-tooltip-pane,
+.leaflet-popup-pane {
+  z-index: auto;
+}
+
+.leaflet-control-container {
+  /* Push zoom controls below header */
+  position: absolute !important;
+}
+
+.leaflet-top.leaflet-right {
+  top: 16px !important;
+}
+
+.leaflet-top.leaflet-left {
+  top: 16px !important;
+  left: 16px !important;
+}
+
+/* Hide footer on the full-screen harita page */
+body:has(.harita-page-root) footer {
+  display: none !important;
+}
+
+.leaflet-tile-pane {
+  filter: brightness(0.55) saturate(0.4) hue-rotate(200deg);
+}
+
+.leaflet-control-attribution {
+  display: none !important;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  background: rgba(20, 22, 29, 0.9) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  color: var(--ink) !important;
+  background: transparent !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(197, 160, 89, 0.15) !important;
+  color: var(--accent) !important;
+}
+
+/* ─── Custom Pin Markers ───────────────────────── */
+.custom-pin {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255,255,255,0.3);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  position: relative;
+}
+
+.custom-pin:hover {
+  transform: scale(1.15);
+}
+
+.custom-pin::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  animation: pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  opacity: 0.5;
+}
+
+/* ─── Loading screen ───────────────────────────── */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.loading-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ─── Scroll sections ──────────────────────────── */
+.scroll-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8vw;
+}
+
+.scroll-section:first-child {
+  min-height: 100vh;
+}
+
+/* ─── Stats counter ────────────────────────────── */
+.stat-number {
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--accent), #e8d0a0);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ─── Centered Landmark Modal (3/4 screen) ──────── */
+.landmark-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.97);
+  width: min(75vw, 900px);
+  max-height: 82vh;
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 20px;
+  z-index: 10000;
+  overflow-y: auto;
+  animation: modal-appear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  box-shadow:
+    0 0 0 1px rgba(197,160,89,0.08),
+    0 32px 80px rgba(0,0,0,0.75),
+    0 8px 24px rgba(0,0,0,0.4);
+}
+
+@keyframes modal-appear {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.94); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Backdrop: above header (9000), below modal (10000) */
+.landmark-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fade-in 0.25s ease forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .landmark-modal {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 20px 20px 0 0;
+    animation: slide-up 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.85); opacity: 0.9; }
+  50%  { transform: scale(1.15); opacity: 0.4; }
+  100% { transform: scale(0.85); opacity: 0.9; }
+}
+
+/* ─── Scrollbar ────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(197, 160, 89, 0.3); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(197, 160, 89, 0.6); }
+
+/* ─── Selection ────────────────────────────────── */
+::selection { background: rgba(197, 160, 89, 0.3); }
+
+/* ─── Image carousel in modal ──────────────────── */
+.modal-gallery img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+/* ─── Category filter tabs ─────────────────────── */
+.cat-tab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.cat-tab:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cat-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0d0e12;
+}
+
+/* ─── Animations ───────────────────────────────── */
+@keyframes animate-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: animate-float 3s ease-in-out infinite;
+}
+
+@keyframes animate-fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: animate-fade-up 0.7s ease both;
+}
+
+@keyframes animate-slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-down {
+  animation: animate-slide-down 0.3s ease both;
+}
+
+/* ─── Ansiklopedi ──────────────────────────────── */
+.ansiklopedi-card {
+  background: rgba(20, 22, 29, 0.7);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 24px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.ansiklopedi-card:hover {
+  border-color: rgba(197,160,89,0.35);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+}
+
+/* ─── Leaflet Marker Cluster Overrides ─────────── */
+.leaflet-tooltip.custom-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background: rgba(20, 22, 29, 0.85) !important;
+  border: 2px solid rgba(197, 160, 89, 0.5) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 50% !important;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background: rgba(197, 160, 89, 0.2) !important;
+  color: #c5a059 !important;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 50% !important;
+}
+
+/* ─── Admin Panel Dialog Fix ───────────────────── */
+.admin-root [data-radix-portal] {
+  z-index: 99999 !important;
+}
+
+.admin-root .fixed.inset-0 {
+  z-index: 99998 !important;
+}

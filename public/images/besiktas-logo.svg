@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" fill="none">
+  <!-- Background circle emblem -->
+  <circle cx="40" cy="40" r="36" fill="#0d0e12" stroke="#c5a059" stroke-width="2"/>
+  <!-- Star shape -->
+  <path d="M40 10 L47 26 L64 26 L51 36 L56 52 L40 42 L24 52 L29 36 L16 26 L33 26 Z" fill="#c5a059"/>
+  <circle cx="40" cy="40" r="10" fill="#0d0e12"/>
+  <circle cx="40" cy="40" r="5" fill="#c5a059"/>
+  <!-- Text: Beşiktaş Belediyesi -->
+  <text x="84" y="30" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#f3f4f6" letter-spacing="0.02em">BEŞİKTAŞ</text>
+  <text x="84" y="48" font-family="Inter, sans-serif" font-size="11" font-weight="500" fill="#9ca3af" letter-spacing="0.05em">BELEDİYESİ</text>
+  <line x1="84" y1="54" x2="180" y2="54" stroke="#c5a059" stroke-width="1" opacity="0.4"/>
+  <text x="84" y="68" font-family="Inter, sans-serif" font-size="9" font-weight="400" fill="#9ca3af" letter-spacing="0.08em">DİJİTAL MÜZE</text>
+</svg>
