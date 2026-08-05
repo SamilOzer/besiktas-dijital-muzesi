@@ -84,12 +84,11 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
         saveLocalMekanlar(pins);
         return pins;
       } else {
-        // Table exists but is empty. Pre-populate it with the default values.
-        console.log('Supabase table is empty, pre-populating with default pins...');
+        console.log('Supabase mekanlar table is empty, seeding with default pins...');
         const initialPins = getLocalMekanlar();
-        for (const pin of initialPins) {
-          await supabase.from('mekanlar').insert(pin);
-        }
+        supabase.from('mekanlar').upsert(initialPins).then(({ error }) => {
+          if (error) console.warn('Supabase seed error:', error.message);
+        });
         return initialPins;
       }
     } catch (e) {
@@ -195,8 +194,14 @@ export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
         
         saveLocalOlaylar(olaylar);
         return olaylar;
+      } else {
+        console.log('Supabase olaylar table is empty, seeding with default events...');
+        const initialEvents = getLocalOlaylar();
+        supabase.from('olaylar').upsert(initialEvents).then(({ error }) => {
+          if (error) console.warn('Supabase olaylar seed error:', error.message);
+        });
+        return initialEvents;
       }
-      return getLocalOlaylar();
     } catch (e) {
       console.warn('Network error fetching olaylar, falling back to local storage:', e);
       return getLocalOlaylar();
