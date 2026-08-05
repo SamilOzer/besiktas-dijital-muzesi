@@ -30,6 +30,7 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
   const mapRef = useRef<HTMLDivElement>(null!);
   const leafletMapRef = useRef<any>(null);
   const clusterGroupRef = useRef<any>(null);
+  const lInstanceRef = useRef<any>(null);
   const onPinClickRef = useRef(onPinClick);
   // Track whether the map is fully initialized
   const [mapReady, setMapReady] = useState(false);
@@ -46,13 +47,17 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
 
     let cancelled = false;
 
-    Promise.all([
-      import("leaflet"),
-      import("leaflet.markercluster")
-    ]).then(([LModule]) => {
-      if (cancelled || !mapRef.current) return;
-      
+    import("leaflet").then((LModule) => {
+      if (cancelled || !mapRef.current) return null;
       const L = LModule.default || LModule;
+      if (typeof window !== "undefined") {
+        (window as any).L = L;
+      }
+      return import("leaflet.markercluster").then(() => L).catch(() => L);
+    }).then((L) => {
+      if (!L || cancelled || !mapRef.current) return;
+
+      lInstanceRef.current = L;
 
       // Patch default icon paths (needed in webpack/Next.js)
       // @ts-ignore
@@ -105,96 +110,95 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
 
   // ── Sync markers whenever pins change OR map becomes ready ──
   useEffect(() => {
-    if (!mapReady || !leafletMapRef.current) return;
+    if (!mapReady || !leafletMapRef.current || !lInstanceRef.current) return;
 
-    import("leaflet").then((L) => {
-      if (!leafletMapRef.current) return;
+    const L = lInstanceRef.current;
 
-      // Clear old cluster group if exists
-      if (clusterGroupRef.current) {
-        clusterGroupRef.current.clearLayers();
-        leafletMapRef.current.removeLayer(clusterGroupRef.current);
-      }
+    // Clear old cluster group if exists
+    if (clusterGroupRef.current) {
+      clusterGroupRef.current.clearLayers();
+      leafletMapRef.current.removeLayer(clusterGroupRef.current);
+    }
 
-      // @ts-ignore
-      const markers = L.markerClusterGroup({
-        showCoverageOnHover: false,
-        maxClusterRadius: 40,
-      });
+    const markers = typeof L.markerClusterGroup === "function"
+      ? L.markerClusterGroup({
+          showCoverageOnHover: false,
+          maxClusterRadius: 40,
+        })
+      : L.layerGroup();
 
-      pins.forEach((pin) => {
-        const color = CATEGORY_COLORS[pin.category] ?? "#c5a059";
-        const icon = CATEGORY_ICONS[pin.category] ?? "📍";
+    pins.forEach((pin) => {
+      const color = CATEGORY_COLORS[pin.category] ?? "#c5a059";
+      const icon = CATEGORY_ICONS[pin.category] ?? "📍";
 
-        let size = 36;
-        if (zoomLevel <= 12) size = 28;
-        else if (zoomLevel === 13) size = 32;
-        else if (zoomLevel === 14) size = 36;
-        else if (zoomLevel === 15) size = 40;
-        else if (zoomLevel >= 16) size = 44;
+      let size = 36;
+      if (zoomLevel <= 12) size = 28;
+      else if (zoomLevel === 13) size = 32;
+      else if (zoomLevel === 14) size = 36;
+      else if (zoomLevel === 15) size = 40;
+      else if (zoomLevel >= 16) size = 44;
 
-        const divIcon = L.divIcon({
-          html: `
-            <div style="
-              width:${size}px;height:${size}px;
-              border-radius:50%;
-              background:${color}28;
-              border:2px solid ${color};
-              display:flex;align-items:center;justify-content:center;
-              font-size:${size * 0.45}px;
-              cursor:pointer;
-              box-shadow:0 4px 20px rgba(0,0,0,0.7);
-              position:relative;
-            ">
-              ${icon}
-              <span style="
-                position:absolute;
-                inset:-6px;
-                border-radius:50%;
-                border:1.5px solid ${color};
-                animation:pulse-ring 2.5s cubic-bezier(0.215,0.61,0.355,1) infinite;
-                opacity:0.5;
-                pointer-events:none;
-              "></span>
-            </div>
-          `,
-          className: "",
-          iconSize: [size, size],
-          iconAnchor: [size / 2, size / 2],
-          popupAnchor: [0, -size / 2],
-        });
-
-        const marker = L.marker(pin.coordinates, { icon: divIcon })
-          .on("click", () => onPinClickRef.current(pin));
-
-        marker.bindTooltip(
-          `<div style="
-            background:#14161d;
-            border:2px solid rgba(255,255,255,0.2);
-            border-radius:8px;padding:7px 12px;
-            font-family:Inter,sans-serif;font-size:12px;
-            color:#f3f4f6;white-space:nowrap;
-            box-shadow:0 4px 16px rgba(0,0,0,0.5);
+      const divIcon = L.divIcon({
+        html: `
+          <div style="
+            width:${size}px;height:${size}px;
+            border-radius:50%;
+            background:${color}28;
+            border:2px solid ${color};
+            display:flex;align-items:center;justify-content:center;
+            font-size:${size * 0.45}px;
+            cursor:pointer;
+            box-shadow:0 4px 20px rgba(0,0,0,0.7);
+            position:relative;
           ">
-            <strong style="color:${color}">${pin.title}</strong><br>
-            <span style="color:#9ca3af;font-size:11px">${pin.categoryLabel}</span>
-            ${pin.era ? `<br><span style="color:#6b7280;font-size:10px">📅 ${pin.era}</span>` : ""}
-          </div>`,
-          {
-            permanent: false,
-            direction: "top",
-            offset: [0, -8],
-            className: "custom-tooltip",
-            opacity: 1,
-          }
-        );
-
-        markers.addLayer(marker);
+            ${icon}
+            <span style="
+              position:absolute;
+              inset:-6px;
+              border-radius:50%;
+              border:1.5px solid ${color};
+              animation:pulse-ring 2.5s cubic-bezier(0.215,0.61,0.355,1) infinite;
+              opacity:0.5;
+              pointer-events:none;
+            "></span>
+          </div>
+        `,
+        className: "",
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+        popupAnchor: [0, -size / 2],
       });
-      
-      leafletMapRef.current.addLayer(markers);
-      clusterGroupRef.current = markers;
+
+      const marker = L.marker(pin.coordinates, { icon: divIcon })
+        .on("click", () => onPinClickRef.current(pin));
+
+      marker.bindTooltip(
+        `<div style="
+          background:#14161d;
+          border:2px solid rgba(255,255,255,0.2);
+          border-radius:8px;padding:7px 12px;
+          font-family:Inter,sans-serif;font-size:12px;
+          color:#f3f4f6;white-space:nowrap;
+          box-shadow:0 4px 16px rgba(0,0,0,0.5);
+        ">
+          <strong style="color:${color}">${pin.title}</strong><br>
+          <span style="color:#9ca3af;font-size:11px">${pin.categoryLabel}</span>
+          ${pin.era ? `<br><span style="color:#6b7280;font-size:10px">📅 ${pin.era}</span>` : ""}
+        </div>`,
+        {
+          permanent: false,
+          direction: "top",
+          offset: [0, -8],
+          className: "custom-tooltip",
+          opacity: 1,
+        }
+      );
+
+      markers.addLayer(marker);
     });
+    
+    leafletMapRef.current.addLayer(markers);
+    clusterGroupRef.current = markers;
   }, [pins, mapReady, zoomLevel]); // re-runs when pins filter changes OR map becomes ready
 
   return (
