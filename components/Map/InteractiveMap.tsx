@@ -26,15 +26,48 @@ const CATEGORY_ICONS: Record<string, string> = {
   "dini-kamusal": "⛪",
 };
 
+const TILE_LAYERS = [
+  {
+    id: "voyager",
+    name: "🏙️ Şehir Haritası (Detaylı)",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+    maxZoom: 19,
+  },
+  {
+    id: "satellite",
+    name: "🛰️ Uydu Görüntüsü (Esri)",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    subdomains: "abcd",
+    maxZoom: 18,
+  },
+  {
+    id: "dark",
+    name: "🌙 Gece Haritası (Dark)",
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+    maxZoom: 19,
+  },
+  {
+    id: "osm",
+    name: "🗺️ Standart OpenStreetMap",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    subdomains: "abc",
+    maxZoom: 19,
+  },
+];
+
 export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null!);
   const leafletMapRef = useRef<any>(null);
   const clusterGroupRef = useRef<any>(null);
+  const currentTileLayerRef = useRef<any>(null);
   const lInstanceRef = useRef<any>(null);
   const onPinClickRef = useRef(onPinClick);
-  // Track whether the map is fully initialized
+
   const [mapReady, setMapReady] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(14);
+  const [selectedTileId, setSelectedTileId] = useState("voyager");
 
   useEffect(() => {
     onPinClickRef.current = onPinClick;
@@ -83,11 +116,14 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         attributionControl: false,
       });
 
-      // OpenStreetMap tile layer — dark filter applied via CSS
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "&copy; OpenStreetMap contributors",
+      const activeConfig = TILE_LAYERS.find((t) => t.id === selectedTileId) || TILE_LAYERS[0];
+      const tileLayer = L.tileLayer(activeConfig.url, {
+        maxZoom: activeConfig.maxZoom,
+        subdomains: activeConfig.subdomains,
+        attribution: "&copy; CartoDB & Esri & OpenStreetMap",
       }).addTo(map);
+
+      currentTileLayerRef.current = tileLayer;
 
       setZoomLevel(map.getZoom());
       map.on("zoomend", () => {
@@ -95,7 +131,6 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       });
 
       leafletMapRef.current = map;
-      // Signal that map is ready so the marker effect can run
       setMapReady(true);
       setTimeout(() => {
         if (leafletMapRef.current) {
@@ -111,7 +146,24 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         leafletMapRef.current = null;
       }
     };
-  }, []); // empty deps — only once
+  }, []);
+
+  const handleTileChange = (newTileId: string) => {
+    setSelectedTileId(newTileId);
+    if (leafletMapRef.current && lInstanceRef.current) {
+      const L = lInstanceRef.current;
+      if (currentTileLayerRef.current) {
+        leafletMapRef.current.removeLayer(currentTileLayerRef.current);
+      }
+      const cfg = TILE_LAYERS.find((t) => t.id === newTileId) || TILE_LAYERS[0];
+      const newLayer = L.tileLayer(cfg.url, {
+        maxZoom: cfg.maxZoom,
+        subdomains: cfg.subdomains,
+        attribution: "&copy; CartoDB & Esri & OpenStreetMap",
+      }).addTo(leafletMapRef.current);
+      currentTileLayerRef.current = newLayer;
+    }
+  }; // empty deps — only once
 
   // ── Sync markers whenever pins change OR map becomes ready ──
   useEffect(() => {
@@ -232,15 +284,33 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         className="w-full h-full absolute inset-0"
       />
 
-      {/* Prominent Top-Right Merkeze Dön Button */}
-      <button
-        onClick={handleRecenter}
-        className="absolute top-4 right-4 z-[1000] bg-[#14161d]/95 hover:bg-[#1b1e28] text-[var(--accent)] border border-[var(--accent)]/40 hover:border-[var(--accent)] backdrop-blur-md px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold transition-all hover:scale-105 active:scale-95"
-        title="Beşiktaş Merkezine Odaklan"
-        id="recenter-map-top-btn"
-      >
-        <span className="text-sm">📍</span> Merkeze Dön (Beşiktaş)
-      </button>
+      {/* Prominent Top-Right Controls: Harita Görünümü & Merkeze Dön */}
+      <div className="absolute top-4 right-4 z-[1000] flex items-center gap-2">
+        {/* Tile Layer Switcher */}
+        <div className="bg-[#14161d]/95 backdrop-blur-md border border-white/15 rounded-xl px-3 py-2 flex items-center gap-2 shadow-2xl">
+          <span className="text-xs font-semibold text-[var(--accent)]">Harita Görünümü:</span>
+          <select
+            value={selectedTileId}
+            onChange={(e) => handleTileChange(e.target.value)}
+            className="bg-transparent text-xs text-white [&>option]:bg-[#14161d] font-bold focus:outline-none cursor-pointer"
+          >
+            {TILE_LAYERS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          onClick={handleRecenter}
+          className="bg-[#14161d]/95 hover:bg-[#1b1e28] text-[var(--accent)] border border-[var(--accent)]/40 hover:border-[var(--accent)] backdrop-blur-md px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold transition-all hover:scale-105 active:scale-95"
+          title="Beşiktaş Merkezine Odaklan"
+          id="recenter-map-top-btn"
+        >
+          <span className="text-sm">📍</span> Merkeze Dön (Beşiktaş)
+        </button>
+      </div>
       
       {/* Map Controls: Bottom-Right Merkeze Dön & Zoom Level */}
       <div className="absolute bottom-6 right-6 z-[1000] flex items-center gap-3">

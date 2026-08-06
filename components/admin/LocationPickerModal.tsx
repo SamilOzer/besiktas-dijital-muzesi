@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import "leaflet/dist/leaflet.css";
-import { Search, MapPin, Check, X } from "lucide-react";
+import { Search, MapPin, Check, X, Layers } from "lucide-react";
 
 interface LocationPickerModalProps {
   initialLat?: number;
@@ -11,6 +12,37 @@ interface LocationPickerModalProps {
   onConfirm: (lat: number, lng: number) => void;
   onClose: () => void;
 }
+
+const TILE_LAYERS = [
+  {
+    id: "voyager",
+    name: "🏙️ Şehir Haritası (Detaylı)",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+    maxZoom: 19,
+  },
+  {
+    id: "satellite",
+    name: "🛰️ Uydu Görüntüsü (Esri)",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    subdomains: "abcd",
+    maxZoom: 18,
+  },
+  {
+    id: "dark",
+    name: "🌙 Gece Haritası (Dark)",
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    subdomains: "abcd",
+    maxZoom: 19,
+  },
+  {
+    id: "osm",
+    name: "🗺️ Standart OpenStreetMap",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    subdomains: "abc",
+    maxZoom: 19,
+  },
+];
 
 export default function LocationPickerModal({
   initialLat = 41.0425,
@@ -22,11 +54,18 @@ export default function LocationPickerModal({
   const mapContainerRef = useRef<HTMLDivElement>(null!);
   const leafletMapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const currentTileLayerRef = useRef<any>(null);
 
   const [lat, setLat] = useState<number>(initialLat || 41.0425);
   const [lng, setLng] = useState<number>(initialLng || 29.0075);
   const [searchQuery, setSearchQuery] = useState<string>(initialAddress);
   const [searching, setSearching] = useState(false);
+  const [selectedTileId, setSelectedTileId] = useState("voyager");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -59,10 +98,14 @@ export default function LocationPickerModal({
         zoomControl: true,
       });
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "&copy; OpenStreetMap",
+      const activeConfig = TILE_LAYERS.find((t) => t.id === selectedTileId) || TILE_LAYERS[0];
+      const tileLayer = L.tileLayer(activeConfig.url, {
+        maxZoom: activeConfig.maxZoom,
+        subdomains: activeConfig.subdomains,
+        attribution: "&copy; CartoDB & Esri & OpenStreetMap",
       }).addTo(map);
+
+      currentTileLayerRef.current = tileLayer;
 
       // Custom Glowing Draggable Pin
       const customIcon = L.divIcon({
@@ -133,6 +176,26 @@ export default function LocationPickerModal({
     };
   }, []);
 
+  // Handle Tile Layer switch
+  const handleTileSwitch = (tileId: string) => {
+    setSelectedTileId(tileId);
+    if (leafletMapRef.current && typeof window !== "undefined") {
+      import("leaflet").then((LModule) => {
+        const L = LModule.default || LModule;
+        if (currentTileLayerRef.current) {
+          leafletMapRef.current.removeLayer(currentTileLayerRef.current);
+        }
+        const cfg = TILE_LAYERS.find((t) => t.id === tileId) || TILE_LAYERS[0];
+        const newLayer = L.tileLayer(cfg.url, {
+          maxZoom: cfg.maxZoom,
+          subdomains: cfg.subdomains,
+          attribution: "&copy; CartoDB & Esri & OpenStreetMap",
+        }).addTo(leafletMapRef.current);
+        currentTileLayerRef.current = newLayer;
+      });
+    }
+  };
+
   // Search Address on Map
   const handleSearchOnMap = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -165,14 +228,26 @@ export default function LocationPickerModal({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     onConfirm(lat, lng);
     onClose();
   };
 
-  return (
+  const handleCancel = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  };
+
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+      className="fixed inset-0 z-[200000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
     >
@@ -184,37 +259,56 @@ export default function LocationPickerModal({
               <MapPin size={16} className="text-[var(--accent)]" /> Haritada Konum Seç
             </h3>
             <p className="text-xs text-neutral-400">
-              İşaretçiyi sürükleyin veya haritada istediğiniz noktaya tıklayın.
+              İşaretçiyi sürükleyin veya haritada istediğiniz noktaya tıklayarak konumu belirleyin.
             </p>
           </div>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={handleCancel}
             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearchOnMap} className="p-3 bg-[#14161d] border-b border-white/10 flex gap-2">
-          <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Adres veya mekan adı ara (Örn: Çırağan Cad. No:32)..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[var(--accent)]"
-            />
+        {/* Controls Bar: Search & Layer Switcher */}
+        <div className="p-3 bg-[#14161d] border-b border-white/10 flex flex-wrap items-center gap-3">
+          <form onSubmit={handleSearchOnMap} className="flex-1 flex gap-2 min-w-[260px]">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Adres veya mekan adı ara (Örn: Çırağan Cad. No:32)..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={searching}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
+            >
+              {searching ? "Aranıyor..." : "Haritada Bul"}
+            </button>
+          </form>
+
+          {/* Tile Layer Selector */}
+          <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-xl px-2.5 py-1">
+            <Layers size={13} className="text-[var(--accent)]" />
+            <select
+              value={selectedTileId}
+              onChange={(e) => handleTileSwitch(e.target.value)}
+              className="bg-transparent text-xs text-white [&>option]:bg-[#14161d] focus:outline-none cursor-pointer font-medium"
+            >
+              {TILE_LAYERS.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <button
-            type="submit"
-            disabled={searching}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl transition-all disabled:opacity-50"
-          >
-            {searching ? "Aranıyor..." : "Haritada Bul"}
-          </button>
-        </form>
+        </div>
 
         {/* Map Container */}
         <div className="flex-1 relative w-full h-full bg-[#0d0e12]">
@@ -235,12 +329,14 @@ export default function LocationPickerModal({
 
           <div className="flex gap-2">
             <button
-              onClick={onClose}
+              type="button"
+              onClick={handleCancel}
               className="px-4 py-2.5 rounded-xl border border-white/15 text-xs text-neutral-300 hover:bg-white/10 transition-all font-semibold"
             >
               Vazgeç
             </button>
             <button
+              type="button"
               onClick={handleConfirm}
               className="px-5 py-2.5 rounded-xl bg-[var(--accent)] text-[#0d0e12] text-xs font-bold hover:brightness-110 active:scale-95 transition-all shadow-lg flex items-center gap-1.5"
             >
@@ -249,6 +345,7 @@ export default function LocationPickerModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

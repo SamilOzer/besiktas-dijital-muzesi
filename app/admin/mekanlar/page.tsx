@@ -90,12 +90,14 @@ export default function MekanlarPage() {
   }, []);
 
   const filteredMekanlar = useMemo(() => {
-    return mekanlar.filter((row) => {
+    const list = mekanlar.filter((row) => {
       const catOk = categoryFilter === "all" || row.category === categoryFilter;
       const neighOk = neighborhoodFilter === "all" || row.neighborhood === neighborhoodFilter;
       const timeOk = timePeriodFilter === "all" || row.timePeriod === timePeriodFilter;
       return catOk && neighOk && timeOk;
     });
+    // Sort newest added first (descending order)
+    return list.slice().reverse();
   }, [mekanlar, categoryFilter, neighborhoodFilter, timePeriodFilter]);
 
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<MekanFormData>({
@@ -278,8 +280,13 @@ export default function MekanlarPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl lg:max-w-5xl p-0 overflow-hidden" style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!showMapPicker) setDialogOpen(open); }}>
+        <DialogContent
+          className="max-w-4xl lg:max-w-5xl p-0 overflow-hidden"
+          style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)', color: 'var(--a-text)' }}
+          onPointerDownOutside={(e) => { if (showMapPicker) e.preventDefault(); }}
+          onInteractOutside={(e) => { if (showMapPicker) e.preventDefault(); }}
+        >
           <DialogHeader>
             <DialogTitle>{editingId ? 'Mekân Düzenle' : 'Yeni Mekân Ekle'}</DialogTitle>
             <p className="text-xs text-[var(--a-muted)]">Harita pinine ait temel bilgileri, konum koordinatlarını ve görselleri güncelleyin.</p>

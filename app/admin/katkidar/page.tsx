@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   getContributions,
   updateContributionStatus,
@@ -57,22 +57,30 @@ export default function KatkilarAdminPage() {
     loadData();
   }, []);
 
-  // Filtered contributions
-  const filteredContributions = contributions.filter((c) => {
-    const typeOk = typeFilter === "all" || c.type === typeFilter;
-    const statusOk = statusFilter === "all" || c.status === statusFilter;
-    const q = searchQuery.toLowerCase().trim();
-    const titleText = c.type === "harita" ? c.title || "" : c.eventTitle || "";
-    const summaryText = c.type === "harita" ? c.summary || "" : c.eventSummary || "";
-    const searchOk =
-      !q ||
-      c.submitterName.toLowerCase().includes(q) ||
-      c.submitterEmail.toLowerCase().includes(q) ||
-      titleText.toLowerCase().includes(q) ||
-      summaryText.toLowerCase().includes(q);
+  // Filtered contributions (sorted newest-first)
+  const filteredContributions = useMemo(() => {
+    const list = contributions.filter((c) => {
+      const typeOk = typeFilter === "all" || c.type === typeFilter;
+      const statusOk = statusFilter === "all" || c.status === statusFilter;
+      const q = searchQuery.toLowerCase().trim();
+      const titleText = c.type === "harita" ? c.title || "" : c.eventTitle || "";
+      const summaryText = c.type === "harita" ? c.summary || "" : c.eventSummary || "";
+      const searchOk =
+        !q ||
+        c.submitterName.toLowerCase().includes(q) ||
+        c.submitterEmail.toLowerCase().includes(q) ||
+        titleText.toLowerCase().includes(q) ||
+        summaryText.toLowerCase().includes(q);
 
-    return typeOk && statusOk && searchOk;
-  });
+      return typeOk && statusOk && searchOk;
+    });
+
+    return list.slice().sort((a, b) => {
+      const timeA = new Date(a.submittedAt || 0).getTime();
+      const timeB = new Date(b.submittedAt || 0).getTime();
+      return timeB - timeA;
+    });
+  }, [contributions, typeFilter, statusFilter, searchQuery]);
 
   const handleOpenDetailModal = (c: Contribution) => {
     setSelectedContribution(c);
@@ -323,8 +331,12 @@ export default function KatkilarAdminPage() {
 
       {/* ── Detail & Editing Modal ── */}
       {selectedContribution && (
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 bg-[#12141a] border-white/10 text-white overflow-hidden">
+        <Dialog open={isModalOpen} onOpenChange={(open) => { if (!showMapPicker) setIsModalOpen(open); }}>
+          <DialogContent
+            className="max-w-4xl max-h-[90vh] flex flex-col p-0 bg-[#12141a] border-white/10 text-white overflow-hidden"
+            onPointerDownOutside={(e) => { if (showMapPicker) e.preventDefault(); }}
+            onInteractOutside={(e) => { if (showMapPicker) e.preventDefault(); }}
+          >
             <DialogHeader className="p-6 pb-4 border-b border-white/10">
               <div className="flex items-center justify-between gap-4">
                 <div>

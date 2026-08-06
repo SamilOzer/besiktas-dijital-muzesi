@@ -34,9 +34,9 @@ export default function MesajlarAdminPage() {
     loadData();
   }, []);
 
-  const filteredMessages = messages.filter((m) => {
-    return statusFilter === "all" || m.status === statusFilter;
-  });
+  const filteredMessages = messages
+    .filter((m) => statusFilter === "all" || m.status === statusFilter)
+    .sort((a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime());
 
   const handleView = (msg: ContactMessage) => {
     setActiveMessage(msg);

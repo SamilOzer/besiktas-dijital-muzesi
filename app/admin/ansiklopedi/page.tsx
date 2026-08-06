@@ -147,11 +147,12 @@ export default function AnsiklopediPage() {
   const [eraFilter, setEraFilter] = useState<string>("all");
 
   const filteredOlaylar = useMemo(() => {
-    return olaylar.filter((row) => {
+    const list = olaylar.filter((row) => {
       const catOk = categoryFilter === "all" || row.category === categoryFilter;
       const eraOk = eraFilter === "all" || row.era === eraFilter;
       return catOk && eraOk;
     });
+    return list.slice().reverse();
   }, [olaylar, categoryFilter, eraFilter]);
 
   const columns: Column<HistoricalEvent>[] = [
