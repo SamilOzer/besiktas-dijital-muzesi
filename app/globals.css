@@ -228,7 +228,7 @@ body:has(.harita-page-root) footer {
 }
 
 .leaflet-tile-pane {
-  filter: brightness(0.55) saturate(0.4) hue-rotate(200deg);
+  filter: brightness(0.75) saturate(0.45) hue-rotate(200deg);
 }
 
 .leaflet-control-attribution {
@@ -328,19 +328,21 @@ body:has(.harita-page-root) footer {
   -webkit-text-fill-color: transparent;
 }
 
-/* ─── Centered Landmark Modal (3/4 screen) ──────── */
+/* ─── Centered Landmark Modal (2-Column Landscape) ──────── */
 .landmark-modal {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.97);
-  width: min(75vw, 900px);
-  max-height: 82vh;
+  width: min(88vw, 1050px);
+  max-height: 85vh;
   background: var(--panel);
-  border: 1px solid rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 20px;
   z-index: 10000;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   animation: modal-appear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   box-shadow:
     0 0 0 1px rgba(197,160,89,0.08),

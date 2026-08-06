@@ -218,11 +218,25 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         className="w-full h-full absolute inset-0"
       />
       
-      {/* Zoom Level Indicator */}
-      <div className="absolute bottom-6 right-6 z-[1000] bg-[#14161d]/90 border border-white/15 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2.5 pointer-events-none">
-        <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
-        <span className="text-xs font-medium text-gray-300">Yakınlaştırma:</span>
-        <span className="text-sm font-bold text-[var(--accent)] font-mono tabular-nums">{zoomLevel}x</span>
+      {/* Map Controls: Merkeze Dön & Zoom Level */}
+      <div className="absolute bottom-6 right-6 z-[1000] flex items-center gap-3">
+        <button
+          onClick={() => {
+            if (leafletMapRef.current) {
+              leafletMapRef.current.flyTo([41.0772, 29.0145], 15.5, { duration: 1.2 });
+            }
+          }}
+          className="bg-[#14161d]/95 hover:bg-[#14161d] text-white border border-white/15 hover:border-[var(--accent)]/50 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+          title="Merkeze Dön (Beşiktaş Belediye Binası)"
+        >
+          <span>🏢</span> Merkeze Dön
+        </button>
+
+        <div className="bg-[#14161d]/90 border border-white/15 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2.5 pointer-events-none">
+          <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
+          <span className="text-xs font-medium text-gray-300">Yakınlaştırma:</span>
+          <span className="text-sm font-bold text-[var(--accent)] font-mono tabular-nums">{zoomLevel}x</span>
+        </div>
       </div>
     </div>
   );

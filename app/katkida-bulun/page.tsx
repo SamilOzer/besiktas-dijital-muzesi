@@ -58,7 +58,7 @@ export default function KatkidaBulunPage() {
     setTimeout(() => setSuccess(false), 5000);
   };
 
-  const inputClass = "w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all";
+  const inputClass = "w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all [&>option]:bg-[#14161d] [&>option]:text-white";
   const labelClass = "block text-sm font-medium text-white/80 mb-1.5";
 
   return (

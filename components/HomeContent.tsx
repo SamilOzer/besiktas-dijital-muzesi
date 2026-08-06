@@ -246,9 +246,6 @@ export default function HomeContent() {
 
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[var(--muted)] z-10">
-          <span className="text-[10px] tracking-[0.25em] uppercase font-medium">
-            Keşfet
-          </span>
           <div className="w-[1px] h-8 bg-gradient-to-b from-[var(--accent)]/50 to-transparent animate-pulse" />
         </div>
 
@@ -277,29 +274,31 @@ export default function HomeContent() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {stats.map(({ value, label, icon: Icon }, i) => (
               <div
                 key={label}
-                className={`text-center group transition-all duration-700 ${
+                className={`glass rounded-2xl p-4 md:p-5 flex items-center gap-3.5 border border-white/10 group transition-all duration-700 ${
                   statsReveal.visible
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-8"
                 }`}
                 style={{ transitionDelay: `${i * 150}ms` }}
               >
-                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[var(--accent)]/8 border border-[var(--accent)]/15 flex items-center justify-center group-hover:bg-[var(--accent)]/15 group-hover:border-[var(--accent)]/30 transition-all duration-300">
-                  <Icon size={22} className="text-[var(--accent)]" />
+                <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center shrink-0 group-hover:bg-[var(--accent)]/20 transition-all duration-300">
+                  <Icon size={20} className="text-[var(--accent)]" />
                 </div>
-                <div className="stat-number mb-2">
-                  <AnimatedCounter
-                    value={value}
-                    visible={statsReveal.visible}
-                  />
+                <div className="flex flex-col text-left">
+                  <div className="text-2xl md:text-3xl font-extrabold text-[var(--accent)] leading-tight font-mono">
+                    <AnimatedCounter
+                      value={value}
+                      visible={statsReveal.visible}
+                    />
+                  </div>
+                  <p className="text-xs text-[var(--muted)] font-medium tracking-wide uppercase mt-0.5">
+                    {label}
+                  </p>
                 </div>
-                <p className="text-sm text-[var(--muted)] tracking-wide uppercase">
-                  {label}
-                </p>
               </div>
             ))}
           </div>

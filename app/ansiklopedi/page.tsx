@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import { X, Search, BookOpen, MapPin, Calendar, Share2 } from "lucide-react";
+import { X, Search, BookOpen, MapPin, Calendar, Share2, ChevronLeft, ChevronRight } from "lucide-react";
 import { HistoricalEvent, EventCategory } from "@/data/ansiklopediData";
 import { fetchOlaylarFromDb } from "@/lib/db-service";
 
@@ -27,6 +27,7 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
   const eraColor = ERA_COLORS[event.era] ?? "#c5a059";
   const eventImages = (event.images && event.images.length > 0 ? event.images : [event.image]).filter(Boolean);
   const [imgIdx, setImgIdx] = useState(0);
+  const hasMultipleImages = eventImages.length > 1;
 
   return (
     <>
@@ -36,52 +37,23 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
         aria-label="Kapat"
       />
       <div
-        className="landmark-modal"
+        className="landmark-modal flex flex-col md:grid md:grid-cols-12 overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={event.title}
         id={`event-modal-${event.id}`}
       >
-        {/* Image */}
-        <div className="relative h-64 bg-[#0a0b0e] overflow-hidden rounded-t-[20px]">
-          {eventImages.length > 0 ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={eventImages[imgIdx]}
-              alt={event.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-8xl opacity-10">
-              <BookOpen size={80} />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--panel)] via-[var(--panel)]/30 to-transparent" />
-
-          {/* Era badge */}
-          <span
-            className="absolute top-4 left-4 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm"
-            style={{ background: `${eraColor}28`, color: eraColor, border: `1px solid ${eraColor}50` }}
-          >
-            {event.era}
-          </span>
-
-          {/* Close */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/90 transition-colors z-10"
-            id={`event-modal-close-${event.id}`}
-            aria-label="Kapat"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 md:p-8">
-          {/* Category + date */}
-          <div className="flex flex-wrap gap-2 mb-4">
+        {/* ── Left Column: Bilgiler (MD: 7 cols) ── */}
+        <div className="md:col-span-7 flex flex-col h-full overflow-y-auto p-6 md:p-8 order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/10">
+          
+          {/* Era + Category + Date badges */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span
+              className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold"
+              style={{ background: `${eraColor}28`, color: eraColor, border: `1px solid ${eraColor}50` }}
+            >
+              {event.era}
+            </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/6 text-[var(--muted)] border border-white/10">
               <Calendar size={11} /> {event.date}
             </span>
@@ -96,7 +68,7 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
 
           {event.location && (
             <div className="flex items-center gap-2 mb-4 text-sm text-[var(--muted)]">
-              <MapPin size={13} style={{ color: eraColor }} />
+              <MapPin size={14} style={{ color: eraColor }} />
               <span>{event.location}</span>
             </div>
           )}
@@ -110,12 +82,12 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
 
           <div className="border-t border-white/8 mb-5" />
 
-          <div className="text-sm text-neutral-300 leading-7 whitespace-pre-line mb-6">
-            {event.fullText}
+          <div className="text-sm text-neutral-300 leading-7 whitespace-pre-line mb-6 flex-1">
+            {event.fullText || event.description || event.summary}
           </div>
 
           {/* Tags + Share */}
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center justify-between flex-wrap gap-4 pt-2 border-t border-white/8 mt-auto">
             <div className="flex flex-wrap gap-2">
               {event.tags.map((tag) => (
                 <span
@@ -136,13 +108,82 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
                   alert('Link kopyalandı!');
                 }
               }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors shadow-sm"
             >
               <Share2 size={14} />
               Paylaş
             </button>
           </div>
         </div>
+
+        {/* ── Right Column: Fotoğraflar & Carousel (MD: 5 cols) ── */}
+        <div className="md:col-span-5 relative h-64 md:h-full bg-[#07080a] flex items-center justify-center order-1 md:order-2 overflow-hidden group">
+          {eventImages.length > 0 ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={eventImages[imgIdx]}
+              alt={`${event.title} foto ${imgIdx + 1}`}
+              className="w-full h-full object-contain p-2"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-8xl opacity-10">
+              <BookOpen size={80} />
+            </div>
+          )}
+
+          {/* Close button (top right) */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors z-20 shadow-lg border border-white/10"
+            id={`event-modal-close-${event.id}`}
+            aria-label="Kapat"
+          >
+            <X size={18} />
+          </button>
+
+          {/* Carousel Arrows */}
+          {hasMultipleImages && (
+            <>
+              <button
+                onClick={() => setImgIdx((i) => (i === 0 ? eventImages.length - 1 : i - 1))}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all z-20 border border-white/10"
+                aria-label="Önceki fotoğraf"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() => setImgIdx((i) => (i + 1) % eventImages.length)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all z-20 border border-white/10"
+                aria-label="Sonraki fotoğraf"
+              >
+                <ChevronRight size={18} />
+              </button>
+
+              {/* Dots */}
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-20">
+                {eventImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setImgIdx(i)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === imgIdx ? "bg-[var(--accent)] w-5" : "bg-white/40 w-1.5"
+                    }`}
+                    aria-label={`Fotoğraf ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Photo Counter */}
+          {eventImages.length > 0 && (
+            <div className="absolute top-4 left-4 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-[11px] text-white/80 font-mono border border-white/10 z-20">
+              {imgIdx + 1} / {eventImages.length}
+            </div>
+          )}
+        </div>
+
       </div>
     </>
   );
