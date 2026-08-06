@@ -130,9 +130,10 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
     if (typeof createClusterGroup === "function") {
       markersContainer = createClusterGroup({
         showCoverageOnHover: false,
-        maxClusterRadius: 55,
-        disableClusteringAtZoom: 16,
+        maxClusterRadius: 25,
+        disableClusteringAtZoom: 15,
         spiderfyOnMaxZoom: true,
+        spiderfyDistanceMultiplier: 1.8,
       });
     } else {
       markersContainer = L.layerGroup();

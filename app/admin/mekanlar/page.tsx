@@ -152,13 +152,26 @@ export default function MekanlarPage() {
       'dini-kamusal': 'Dini & Kamusal'
     };
 
+    // Ensure pin doesn't overlap exactly with an existing pin
+    let targetLat = data.lat;
+    let targetLng = data.lng;
+    const existingMekanlar = mekanlar.filter(m => m.id !== editingId);
+    let attempts = 0;
+    while (existingMekanlar.some(m => Math.abs(m.coordinates[0] - targetLat) < 0.0001 && Math.abs(m.coordinates[1] - targetLng) < 0.0001) && attempts < 10) {
+      attempts++;
+      targetLat += 0.0003 * (attempts % 2 === 0 ? 1 : -1);
+      targetLng += 0.0003 * (attempts % 3 === 0 ? 1 : -1);
+    }
+
+    const finalCoordinates: [number, number] = [targetLat, targetLng];
+
     if (editingId) {
       updateMekan(editingId, {
         ...data,
         categoryLabel: categoryLabels[data.category],
         fullHistory: data.summary,
         description: data.description,
-        coordinates: [data.lat, data.lng],
+        coordinates: finalCoordinates,
         images: data.images?.filter(img => img.trim() !== '') || [],
       });
     } else {
@@ -168,7 +181,7 @@ export default function MekanlarPage() {
         categoryLabel: categoryLabels[data.category],
         fullHistory: data.summary,
         description: data.description,
-        coordinates: [data.lat, data.lng],
+        coordinates: finalCoordinates,
         images: data.images?.filter(img => img.trim() !== '') || [],
       });
     }
