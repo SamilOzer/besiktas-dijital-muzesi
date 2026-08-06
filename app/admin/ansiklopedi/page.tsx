@@ -251,14 +251,33 @@ export default function AnsiklopediPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="date">Tarih</Label>
+                      <Label htmlFor="date">Tarih / Yıl</Label>
                       <Input id="date" placeholder="Örn. 1903" {...register('date')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
                       {errors.date && <p className="text-xs text-red-600">{errors.date.message}</p>}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="era">Dönem</Label>
-                      <Input id="era" placeholder="Örn. 20. Yüzyıl" {...register('era')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                      <Label>Dönem / Çağ</Label>
+                      <Controller
+                        name="era"
+                        control={control}
+                        render={({ field }) => (
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
+                              <SelectValue placeholder="Dönem seçin" />
+                            </SelectTrigger>
+                            <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+                              <SelectItem value="Osmanlı Klasik Dönemi">Osmanlı Klasik Dönemi</SelectItem>
+                              <SelectItem value="Tanzimat Dönemi">Tanzimat Dönemi</SelectItem>
+                              <SelectItem value="Hamidiye Dönemi">Hamidiye Dönemi</SelectItem>
+                              <SelectItem value="II. Meşrutiyet Dönemi">II. Meşrutiyet Dönemi</SelectItem>
+                              <SelectItem value="Cumhuriyet Dönemi">Cumhuriyet Dönemi</SelectItem>
+                              <SelectItem value="19. Yüzyıl">19. Yüzyıl</SelectItem>
+                              <SelectItem value="20. Yüzyıl">20. Yüzyıl</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                       {errors.era && <p className="text-xs text-red-600">{errors.era.message}</p>}
                     </div>
                   </div>
@@ -270,17 +289,31 @@ export default function AnsiklopediPage() {
                         name="category"
                         control={control}
                         render={({ field }) => (
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={(val) => {
+                              field.onChange(val);
+                              const labels: Record<string, string> = {
+                                siyasi: "Siyasi Tarih",
+                                askeri: "Askeri Tarih",
+                                kulturel: "Kültür & Sanat",
+                                toplumsal: "Toplumsal Yaşam",
+                                spor: "Spor Tarihi",
+                                mimari: "Mimari Miras",
+                              };
+                              setValue("categoryLabel", labels[val] || "Tarihi Olay");
+                            }}
+                          >
                             <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
                               <SelectValue placeholder="Seçin" />
                             </SelectTrigger>
                             <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-                              <SelectItem value="siyasi">Siyasi</SelectItem>
-                              <SelectItem value="askeri">Askeri</SelectItem>
-                              <SelectItem value="kulturel">Kültürel</SelectItem>
-                              <SelectItem value="toplumsal">Toplumsal</SelectItem>
-                              <SelectItem value="spor">Spor</SelectItem>
-                              <SelectItem value="mimari">Mimari</SelectItem>
+                              <SelectItem value="siyasi">Siyasi Tarih</SelectItem>
+                              <SelectItem value="askeri">Askeri Tarih</SelectItem>
+                              <SelectItem value="kulturel">Kültür & Sanat</SelectItem>
+                              <SelectItem value="toplumsal">Toplumsal Yaşam</SelectItem>
+                              <SelectItem value="spor">Spor Tarihi</SelectItem>
+                              <SelectItem value="mimari">Mimari Miras</SelectItem>
                             </SelectContent>
                           </Select>
                         )}
@@ -296,8 +329,47 @@ export default function AnsiklopediPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="location">Konum (Opsiyonel)</Label>
-                    <Input id="location" placeholder="Örn. Beşiktaş Meydanı" {...register('location')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                    <Label>Konum / Semt</Label>
+                    <Controller
+                      name="location"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value || ""} onValueChange={field.onChange}>
+                          <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
+                            <SelectValue placeholder="Konum seçin" />
+                          </SelectTrigger>
+                          <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+                            <SelectItem value="Beşiktaş Meydanı">Beşiktaş Meydanı</SelectItem>
+                            <SelectItem value="Dolmabahçe">Dolmabahçe</SelectItem>
+                            <SelectItem value="Ortaköy">Ortaköy</SelectItem>
+                            <SelectItem value="Yıldız">Yıldız</SelectItem>
+                            <SelectItem value="Akaretler">Akaretler</SelectItem>
+                            <SelectItem value="Ihlamur">Ihlamur</SelectItem>
+                            <SelectItem value="Bebek">Bebek</SelectItem>
+                            <SelectItem value="Arnavutköy">Arnavutköy</SelectItem>
+                            <SelectItem value="Levent">Levent</SelectItem>
+                            <SelectItem value="Abbasağa">Abbasağa</SelectItem>
+                            <SelectItem value="Vişnezade">Vişnezade</SelectItem>
+                            <SelectItem value="Sinanpaşa">Sinanpaşa</SelectItem>
+                            <SelectItem value="Cihannüma">Cihannüma</SelectItem>
+                            <SelectItem value="Muradiye">Muradiye</SelectItem>
+                            <SelectItem value="Türkali">Türkali</SelectItem>
+                            <SelectItem value="Dikilitaş">Dikilitaş</SelectItem>
+                            <SelectItem value="Balmumcu">Balmumcu</SelectItem>
+                            <SelectItem value="Gayrettepe">Gayrettepe</SelectItem>
+                            <SelectItem value="Nisbetiye">Nisbetiye</SelectItem>
+                            <SelectItem value="Etiler">Etiler</SelectItem>
+                            <SelectItem value="Kültür">Kültür</SelectItem>
+                            <SelectItem value="Levazım">Levazım</SelectItem>
+                            <SelectItem value="Akatlar">Akatlar</SelectItem>
+                            <SelectItem value="Konaklar">Konaklar</SelectItem>
+                            <SelectItem value="Kuruçeşme">Kuruçeşme</SelectItem>
+                            <SelectItem value="Mecidiye">Mecidiye</SelectItem>
+                            <SelectItem value="Ulus">Ulus</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
                   </div>
 
                   <div className="space-y-2">

@@ -210,6 +210,8 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
 
 export default function AnsiklopediPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedEra, setSelectedEra] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeEvent, setActiveEvent] = useState<HistoricalEvent | null>(null);
   const [events, setEvents] = useState<HistoricalEvent[]>([]);
@@ -248,16 +250,27 @@ export default function AnsiklopediPage() {
   const filtered = useMemo(() => {
     return events.filter((e) => {
       const matchCat = selectedCategory === "all" || e.category === selectedCategory;
-      const q = searchQuery.toLowerCase();
+      const matchEra = selectedEra === "all" || (e.era && e.era.toLowerCase().includes(selectedEra.toLowerCase()));
+      const matchLoc = selectedLocation === "all" || (e.location && e.location.toLowerCase().includes(selectedLocation.toLowerCase()));
+      const q = searchQuery.toLowerCase().trim();
       const matchSearch =
         !q ||
         e.title.toLowerCase().includes(q) ||
         e.summary.toLowerCase().includes(q) ||
+        (e.fullText && e.fullText.toLowerCase().includes(q)) ||
+        (e.location && e.location.toLowerCase().includes(q)) ||
         e.tags.some((t) => t.toLowerCase().includes(q)) ||
         e.era.toLowerCase().includes(q);
-      return matchCat && matchSearch;
+      return matchCat && matchEra && matchLoc && matchSearch;
     });
-  }, [selectedCategory, searchQuery, events]);
+  }, [selectedCategory, selectedEra, selectedLocation, searchQuery, events]);
+
+  const handleResetFilters = () => {
+    setSelectedCategory("all");
+    setSelectedEra("all");
+    setSelectedLocation("all");
+    setSearchQuery("");
+  };
 
   return (
     <main className="min-h-screen pt-28 pb-24 px-6 md:px-[8vw]">
@@ -274,20 +287,71 @@ export default function AnsiklopediPage() {
           tarihi dönüm noktaları; savaşlar, siyasi krizler, kültürel gelişmeler ve daha fazlası.
         </p>
 
-        {/* ─── Search bar ─── */}
-        <div className="relative max-w-md mb-8">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
-          <input
-            type="text"
-            id="ansiklopedi-search"
-            placeholder="Olay, dönem veya etiket ara…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-          />
+        {/* ─── Search & Dropdown Filters Bar ─── */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 mb-8">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+            <input
+              type="text"
+              id="ansiklopedi-search"
+              placeholder="Olay, konu veya etiket ara…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Era Filter */}
+            <select
+              value={selectedEra}
+              onChange={(e) => setSelectedEra(e.target.value)}
+              className="bg-[#14161d] border border-white/15 rounded-xl px-4 py-3 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none focus:border-[var(--accent)]"
+            >
+              <option value="all">📅 Tüm Dönemler</option>
+              <option value="Osmanlı Klasik Dönemi">Osmanlı Klasik Dönemi</option>
+              <option value="Tanzimat Dönemi">Tanzimat Dönemi</option>
+              <option value="Hamidiye Dönemi">Hamidiye Dönemi</option>
+              <option value="II. Meşrutiyet Dönemi">II. Meşrutiyet Dönemi</option>
+              <option value="Cumhuriyet Dönemi">Cumhuriyet Dönemi</option>
+              <option value="19. Yüzyıl">19. Yüzyıl</option>
+              <option value="20. Yüzyıl">20. Yüzyıl</option>
+            </select>
+
+            {/* Location Filter */}
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="bg-[#14161d] border border-white/15 rounded-xl px-4 py-3 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none focus:border-[var(--accent)]"
+            >
+              <option value="all">📍 Tüm Konumlar</option>
+              <option value="Beşiktaş Meydanı">Beşiktaş Meydanı</option>
+              <option value="Dolmabahçe">Dolmabahçe</option>
+              <option value="Ortaköy">Ortaköy</option>
+              <option value="Yıldız">Yıldız</option>
+              <option value="Akaretler">Akaretler</option>
+              <option value="Ihlamur">Ihlamur</option>
+              <option value="Bebek">Bebek</option>
+              <option value="Arnavutköy">Arnavutköy</option>
+              <option value="Levent">Levent</option>
+              <option value="Abbasağa">Abbasağa</option>
+              <option value="Vişnezade">Vişnezade</option>
+              <option value="Sinanpaşa">Sinanpaşa</option>
+              <option value="Kuruçeşme">Kuruçeşme</option>
+            </select>
+
+            {(selectedCategory !== "all" || selectedEra !== "all" || selectedLocation !== "all" || searchQuery !== "") && (
+              <button
+                onClick={handleResetFilters}
+                className="text-xs text-[var(--accent)] hover:underline px-2 py-1"
+              >
+                Filtreleri Sıfırla
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* ─── Category filter ─── */}
+        {/* ─── Category filter tabs ─── */}
         <div className="flex flex-wrap gap-2 mb-10">
           {CATEGORIES.map(({ id, label, emoji }) => (
             <button
