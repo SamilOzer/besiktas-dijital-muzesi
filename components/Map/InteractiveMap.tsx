@@ -143,15 +143,15 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       const color = CATEGORY_COLORS[pin.category] ?? "#c5a059";
       const icon = CATEGORY_ICONS[pin.category] ?? "📍";
 
-      let size = 34;
-      if (zoomLevel <= 11) size = 16;
-      else if (zoomLevel === 12) size = 20;
-      else if (zoomLevel === 13) size = 26;
-      else if (zoomLevel === 14) size = 34;
-      else if (zoomLevel === 15) size = 40;
-      else if (zoomLevel >= 16) size = 46;
+      let size = 30;
+      if (zoomLevel <= 11) size = 14;
+      else if (zoomLevel === 12) size = 18;
+      else if (zoomLevel === 13) size = 24;
+      else if (zoomLevel === 14) size = 30;
+      else if (zoomLevel === 15) size = 36;
+      else if (zoomLevel >= 16) size = 42;
 
-      const showEmoji = size >= 24;
+      const showEmoji = size >= 22;
 
       const divIcon = L.divIcon({
         html: `

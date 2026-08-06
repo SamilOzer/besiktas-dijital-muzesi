@@ -5,20 +5,50 @@ import { ansiklopediData, HistoricalEvent } from '@/data/ansiklopediData';
 const LOCAL_STORAGE_KEY = 'besiktas_mekanlar_db';
 const LOCAL_STORAGE_OLAYLAR_KEY = 'besiktas_olaylar_db';
 
+const VALID_CATEGORIES = ["heykeller", "saraylar", "tarihi-yapilar", "spor", "dini-kamusal"];
+
+export const normalizePinData = (pin: PinLocation): PinLocation => {
+  let cat = (pin.category || "").toLowerCase().trim();
+  if (cat.includes("heykel") || cat.includes("anıt")) cat = "heykeller";
+  else if (cat.includes("saray") || cat.includes("kasır")) cat = "saraylar";
+  else if (cat.includes("spor") || cat.includes("stadyum")) cat = "spor";
+  else if (cat.includes("dini") || cat.includes("camii") || cat.includes("kamusal")) cat = "dini-kamusal";
+  else if (!VALID_CATEGORIES.includes(cat)) cat = "tarihi-yapilar";
+
+  let period = (pin.timePeriod || "").trim();
+  if (period.includes("osmanlı") || period.includes("klasik")) period = "1400-1600";
+  else if (period.includes("orta")) period = "1600-1800";
+  else if (period.includes("tanzimat") && !period.includes("hamidiye")) period = "1800-1850";
+  else if (period.includes("hamidiye")) period = "1850-1900";
+  else if (period.includes("cumhuriyet") || period.includes("meşrutiyet")) period = "1900-1960";
+  else if (!["1400-1600","1600-1800","1800-1850","1850-1900","1900-1960"].includes(period)) period = "1900-1960";
+
+  return {
+    ...pin,
+    category: cat as any,
+    timePeriod: period as any,
+    neighborhood: pin.neighborhood || "Sinanpaşa",
+    coordinates: Array.isArray(pin.coordinates) && pin.coordinates.length === 2 && !isNaN(Number(pin.coordinates[0]))
+      ? [Number(pin.coordinates[0]), Number(pin.coordinates[1])]
+      : [41.0425, 29.0075]
+  };
+};
+
 // Helper to get local data
 const getLocalMekanlar = (): PinLocation[] => {
-  if (typeof window === 'undefined') return besiktasPinData;
+  if (typeof window === 'undefined') return besiktasPinData.map(normalizePinData);
   try {
     const data = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!data) {
-      // Initialize local storage with default data
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(besiktasPinData));
-      return besiktasPinData;
+      const normalizedDefaults = besiktasPinData.map(normalizePinData);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedDefaults));
+      return normalizedDefaults;
     }
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    return (Array.isArray(parsed) ? parsed : besiktasPinData).map(normalizePinData);
   } catch (error) {
     console.error('Failed to parse local storage', error);
-    return besiktasPinData;
+    return besiktasPinData.map(normalizePinData);
   }
 };
 
@@ -31,11 +61,19 @@ const notifyDataChanged = () => {
 // Helper to save local data
 const saveLocalMekanlar = (items: PinLocation[]) => {
   if (typeof window === 'undefined') return;
+  const normalized = items.map(normalizePinData);
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalized));
     notifyDataChanged();
   } catch (error) {
-    console.error('Failed to save to local storage', error);
+    console.warn('LocalStorage quota warning, compressing image data:', error);
+    const slimmed = normalized.map((p) => ({ ...p, images: p.images?.slice(0, 1) || [] }));
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(slimmed));
+      notifyDataChanged();
+    } catch (e) {
+      console.error('Failed to save to local storage even after compression', e);
+    }
   }
 };
 
