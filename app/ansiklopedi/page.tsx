@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import { X, Search, BookOpen, MapPin, Calendar, Share2, ChevronLeft, ChevronRight } from "lucide-react";
+import { createPortal } from "react-dom";
 import { HistoricalEvent, EventCategory } from "@/data/ansiklopediData";
 import { fetchOlaylarFromDb } from "@/lib/db-service";
 
@@ -27,6 +28,12 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
   const eraColor = ERA_COLORS[event.era] ?? "#c5a059";
   const eventImages = (event.images && event.images.length > 0 ? event.images : [event.image]).filter(Boolean);
   const [imgIdx, setImgIdx] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const hasMultipleImages = eventImages.length > 1;
 
   useEffect(() => {
@@ -34,7 +41,9 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  return (
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
     <>
       <div
         className="landmark-backdrop"
@@ -194,7 +203,8 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
         </div>
 
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 

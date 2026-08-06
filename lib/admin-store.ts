@@ -3,7 +3,7 @@
 
 import { besiktasPinData, PinLocation } from "@/data/besiktasPinData";
 import { ansiklopediData, HistoricalEvent } from "@/data/ansiklopediData";
-import { savePinToDb, deletePinFromDb, saveOlayToDb, deleteOlayFromDb, fetchOlaylarFromDb, fetchPinsFromDb } from "./db-service";
+import { savePinToDb, deletePinFromDb, saveOlayToDb, deleteOlayFromDb, fetchOlaylarFromDb, fetchPinsFromDb, normalizePinData } from "./db-service";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type UserRole = "admin" | "editor" | "viewer";
@@ -98,7 +98,22 @@ export const updateCategoryStats = () => {
 updateCategoryStats();
 
 // ─── Mekan CRUD ───────────────────────────────────────────────────────────────
-export const getMekanlar = () => [...mekanlar];
+export const getMekanlar = (): PinLocation[] => {
+  if (typeof window !== "undefined") {
+    try {
+      const data = localStorage.getItem("besiktas_mekanlar_db");
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          mekanlar = parsed.map(normalizePinData);
+        }
+      }
+    } catch (e) {
+      console.error("Error reading mekanlar from localStorage:", e);
+    }
+  }
+  return [...mekanlar];
+};
 
 export const fetchMekanlar = async (): Promise<PinLocation[]> => {
   try {
@@ -109,38 +124,58 @@ export const fetchMekanlar = async (): Promise<PinLocation[]> => {
   } catch (err) {
     console.error("Error fetching mekanlar from database:", err);
   }
-  return [...mekanlar];
+  return getMekanlar();
 };
 
 export const addMekan = (item: PinLocation) => {
-  mekanlar = [...mekanlar, item];
+  const normalized = normalizePinData(item);
+  const current = getMekanlar();
+  const updated = [...current.filter(m => m.id !== normalized.id), normalized];
+  mekanlar = updated;
   updateCategoryStats();
+  savePinToDb(normalized).catch((err: any) => console.error("Error saving pin to database:", err));
   notifyDataUpdated();
-  // Async background sync with Supabase and localStorage
-  savePinToDb(item).catch((err: any) => console.error("Error saving pin to database:", err));
-  return item;
+  return normalized;
 };
 
 export const updateMekan = (id: string, updates: Partial<PinLocation>) => {
-  mekanlar = mekanlar.map((m) => (m.id === id ? { ...m, ...updates } : m));
+  const current = getMekanlar();
+  const updatedList = current.map((m) => (m.id === id ? normalizePinData({ ...m, ...updates }) : m));
+  mekanlar = updatedList;
   updateCategoryStats();
-  notifyDataUpdated();
-  const updated = mekanlar.find((m) => m.id === id) ?? null;
-  if (updated) {
-    savePinToDb(updated).catch((err: any) => console.error("Error updating pin in database:", err));
+  const updatedItem = mekanlar.find((m) => m.id === id) ?? null;
+  if (updatedItem) {
+    savePinToDb(updatedItem).catch((err: any) => console.error("Error updating pin in database:", err));
   }
-  return updated;
+  notifyDataUpdated();
+  return updatedItem;
 };
 
 export const deleteMekan = (id: string) => {
-  mekanlar = mekanlar.filter((m) => m.id !== id);
+  const current = getMekanlar();
+  mekanlar = current.filter((m) => m.id !== id);
   updateCategoryStats();
-  notifyDataUpdated();
   deletePinFromDb(id).catch((err: any) => console.error("Error deleting pin from database:", err));
+  notifyDataUpdated();
 };
 
 // ─── Ansiklopedi CRUD ─────────────────────────────────────────────────────────
-export const getOlaylar = () => [...olaylar];
+export const getOlaylar = (): HistoricalEvent[] => {
+  if (typeof window !== "undefined") {
+    try {
+      const data = localStorage.getItem("besiktas_olaylar_db");
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          olaylar = parsed;
+        }
+      }
+    } catch (e) {
+      console.error("Error reading olaylar from localStorage:", e);
+    }
+  }
+  return [...olaylar];
+};
 
 export const fetchOlaylar = async (): Promise<HistoricalEvent[]> => {
   try {

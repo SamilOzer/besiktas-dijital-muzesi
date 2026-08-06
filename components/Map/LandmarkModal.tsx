@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Share2, Navigation, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { PinLocation } from "@/data/besiktasPinData";
 
@@ -26,6 +27,11 @@ const categoryIcons: Record<string, string> = {
 
 export default function LandmarkModal({ pin, onClose }: LandmarkModalProps) {
   const [imgIndex, setImgIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // ESC key
   useEffect(() => {
@@ -59,7 +65,9 @@ export default function LandmarkModal({ pin, onClose }: LandmarkModalProps) {
     }
   };
 
-  return (
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
     <>
       {/* ── Backdrop ── */}
       <div
@@ -232,6 +240,7 @@ export default function LandmarkModal({ pin, onClose }: LandmarkModalProps) {
         </div>
 
       </div>
-    </>
+    </>,
+    document.body
   );
 }

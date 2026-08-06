@@ -145,11 +145,11 @@ export default function MekanlarPage() {
 
   const onSubmit = (data: MekanFormData) => {
     const categoryLabels: Record<string, string> = {
-      heykeller: 'Heykeller',
-      saraylar: 'Saraylar',
-      'tarihi-yapilar': 'Tarihi Yapılar',
-      spor: 'Spor',
-      'dini-kamusal': 'Dini & Kamusal'
+      heykeller: 'Heykeller & Anıtlar',
+      saraylar: 'Saraylar & Kasırlar',
+      'tarihi-yapilar': 'Tarihi Evler & Yapılar',
+      spor: 'Stadyum & Spor Tarihi',
+      'dini-kamusal': 'Dini & Kamusal Yapılar'
     };
 
     // Ensure pin doesn't overlap exactly with an existing pin
@@ -224,11 +224,11 @@ export default function MekanlarPage() {
               className="bg-[#14161d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none"
             >
               <option value="all">Tüm Kategoriler</option>
-              <option value="saraylar">Saraylar & Kasırlar</option>
               <option value="heykeller">Heykeller & Anıtlar</option>
-              <option value="tarihi-yapilar">Tarihi Yapılar</option>
+              <option value="saraylar">Saraylar & Kasırlar</option>
+              <option value="tarihi-yapilar">Tarihi Evler & Yapılar</option>
+              <option value="spor">Stadyum & Spor Tarihi</option>
               <option value="dini-kamusal">Dini & Kamusal Yapılar</option>
-              <option value="spor">Spor & Kültür</option>
             </select>
 
             {/* Neighborhood Filter */}
@@ -313,11 +313,11 @@ export default function MekanlarPage() {
                               <SelectValue placeholder="Seçin" />
                             </SelectTrigger>
                             <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-                              <SelectItem value="heykeller">Heykeller</SelectItem>
-                              <SelectItem value="saraylar">Saraylar</SelectItem>
-                              <SelectItem value="tarihi-yapilar">Tarihi Yapılar</SelectItem>
-                              <SelectItem value="spor">Spor</SelectItem>
-                              <SelectItem value="dini-kamusal">Dini & Kamusal</SelectItem>
+                              <SelectItem value="heykeller">Heykeller & Anıtlar</SelectItem>
+                              <SelectItem value="saraylar">Saraylar & Kasırlar</SelectItem>
+                              <SelectItem value="tarihi-yapilar">Tarihi Evler & Yapılar</SelectItem>
+                              <SelectItem value="spor">Stadyum & Spor Tarihi</SelectItem>
+                              <SelectItem value="dini-kamusal">Dini & Kamusal Yapılar</SelectItem>
                             </SelectContent>
                           </Select>
                         )}
