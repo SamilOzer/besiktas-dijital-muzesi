@@ -358,7 +358,7 @@ body:has(.harita-page-root) footer {
   background: var(--panel);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 20px;
-  z-index: 10000;
+  z-index: 100001;
   overflow: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -376,11 +376,11 @@ body:has(.harita-page-root) footer {
   to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
-/* Backdrop: above header (9000), below modal (10000) */
+/* Backdrop: above header (9000), below modal (100001) */
 .landmark-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 9500;
+  z-index: 100000;
   background: rgba(0,0,0,0.65);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);

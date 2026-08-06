@@ -106,9 +106,11 @@ const saveLocalOlaylar = (items: HistoricalEvent[]) => {
 
 /**
  * Fetches all map pins (mekanlar) from Supabase if configured.
- * Otherwise, falls back to browser localStorage (and ultimately default data).
+ * Always merges local pins so newly added pins are never lost.
  */
 export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
+  const localList = getLocalMekanlar();
+
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -116,13 +118,8 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
         .select('*')
         .order('title', { ascending: true });
 
-      if (error) {
-        console.warn('Supabase fetch error, falling back to local storage:', error.message);
-        return getLocalMekanlar();
-      }
-
-      if (data && data.length > 0) {
-        const pins = data.map((item: any) => ({
+      if (!error && data && data.length > 0) {
+        const dbPins = data.map((item: any) => ({
           ...item,
           coordinates: Array.isArray(item.coordinates) 
             ? [Number(item.coordinates[0]), Number(item.coordinates[1])] 
@@ -130,22 +127,22 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
           images: Array.isArray(item.images) ? item.images : []
         })) as PinLocation[];
         
-        saveLocalMekanlar(pins);
-        return pins;
-      } else {
-        console.log('Supabase mekanlar table is empty, seeding with default pins...');
-        const initialPins = getLocalMekanlar();
-        supabase.from('mekanlar').upsert(initialPins).then(({ error }) => {
-          if (error) console.warn('Supabase seed error:', error.message);
+        // Merge dbPins and localList without duplicating IDs
+        const mergedList = [...dbPins];
+        localList.forEach((lp) => {
+          if (!mergedList.some((dp) => dp.id === lp.id)) {
+            mergedList.push(lp);
+          }
         });
-        return initialPins;
+
+        saveLocalMekanlar(mergedList);
+        return mergedList.map(normalizePinData);
       }
     } catch (e) {
       console.warn('Network error, falling back to local storage:', e);
-      return getLocalMekanlar();
     }
   }
-  return getLocalMekanlar();
+  return localList.map(normalizePinData);
 };
 
 /**
@@ -153,12 +150,13 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
  * Also persists changes in local storage.
  */
 export const savePinToDb = async (pin: PinLocation): Promise<PinLocation> => {
+  const normalizedPin = normalizePinData(pin);
   const localList = getLocalMekanlar();
-  const index = localList.findIndex((item) => item.id === pin.id);
+  const index = localList.findIndex((item) => item.id === normalizedPin.id);
   if (index !== -1) {
-    localList[index] = pin;
+    localList[index] = normalizedPin;
   } else {
-    localList.push(pin);
+    localList.push(normalizedPin);
   }
   saveLocalMekanlar(localList);
 
@@ -167,19 +165,19 @@ export const savePinToDb = async (pin: PinLocation): Promise<PinLocation> => {
       const { error } = await supabase
         .from('mekanlar')
         .upsert({
-          id: pin.id,
-          title: pin.title,
-          category: pin.category,
-          categoryLabel: pin.categoryLabel,
-          coordinates: pin.coordinates,
-          summary: pin.summary,
-          fullHistory: pin.fullHistory,
-          images: pin.images,
-          era: pin.era || null,
-          address: pin.address || null,
-          description: pin.description || null,
-          timePeriod: pin.timePeriod,
-          neighborhood: pin.neighborhood
+          id: normalizedPin.id,
+          title: normalizedPin.title,
+          category: normalizedPin.category,
+          categoryLabel: normalizedPin.categoryLabel,
+          coordinates: normalizedPin.coordinates,
+          summary: normalizedPin.summary,
+          fullHistory: normalizedPin.fullHistory,
+          images: normalizedPin.images,
+          era: normalizedPin.era || null,
+          address: normalizedPin.address || null,
+          description: normalizedPin.description || null,
+          timePeriod: normalizedPin.timePeriod,
+          neighborhood: normalizedPin.neighborhood
         });
 
       if (error) {
@@ -190,7 +188,7 @@ export const savePinToDb = async (pin: PinLocation): Promise<PinLocation> => {
     }
   }
 
-  return pin;
+  return normalizedPin;
 };
 
 /**
@@ -219,9 +217,11 @@ export const deletePinFromDb = async (id: string): Promise<void> => {
 
 /**
  * Fetches all ansiklopedi olaylar from Supabase if configured.
- * Otherwise, falls back to browser localStorage.
+ * Always merges local events so newly added events are never lost.
  */
 export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
+  const localList = getLocalOlaylar();
+
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -229,34 +229,28 @@ export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
         .select('*')
         .order('date', { ascending: false });
 
-      if (error) {
-        console.warn('Supabase fetch olaylar error, falling back to local storage:', error.message);
-        return getLocalOlaylar();
-      }
-
-      if (data && data.length > 0) {
-        const olaylar = data.map((item: any) => ({
+      if (!error && data && data.length > 0) {
+        const dbOlaylar = data.map((item: any) => ({
           ...item,
           tags: Array.isArray(item.tags) ? item.tags : [],
           images: Array.isArray(item.images) ? item.images : [],
         })) as HistoricalEvent[];
-        
-        saveLocalOlaylar(olaylar);
-        return olaylar;
-      } else {
-        console.log('Supabase olaylar table is empty, seeding with default events...');
-        const initialEvents = getLocalOlaylar();
-        supabase.from('olaylar').upsert(initialEvents).then(({ error }) => {
-          if (error) console.warn('Supabase olaylar seed error:', error.message);
+
+        const mergedList = [...dbOlaylar];
+        localList.forEach((lo) => {
+          if (!mergedList.some((doItem) => doItem.id === lo.id)) {
+            mergedList.push(lo);
+          }
         });
-        return initialEvents;
+        
+        saveLocalOlaylar(mergedList);
+        return mergedList;
       }
     } catch (e) {
       console.warn('Network error fetching olaylar, falling back to local storage:', e);
-      return getLocalOlaylar();
     }
   }
-  return getLocalOlaylar();
+  return localList;
 };
 
 /**
