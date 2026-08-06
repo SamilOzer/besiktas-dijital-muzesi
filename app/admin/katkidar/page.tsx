@@ -33,11 +33,15 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import ImageUploadInput from "@/components/ImageUploadInput";
+import dynamic from "next/dynamic";
+
+const LocationPickerModal = dynamic(() => import("@/components/admin/LocationPickerModal"), { ssr: false });
 
 export default function KatkilarAdminPage() {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [selectedContribution, setSelectedContribution] = useState<Contribution | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showMapPicker, setShowMapPicker] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Contribution>>({});
 
   // Filter states
@@ -400,6 +404,16 @@ export default function KatkilarAdminPage() {
                     </div>
                   </div>
 
+                  <div className="flex items-center justify-between mt-2 mb-1">
+                    <label className="text-xs font-semibold text-[var(--accent)]">Konum Koordinatları</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowMapPicker(true)}
+                      className="text-[11px] font-bold px-2.5 py-1 rounded bg-[var(--accent)]/15 border border-[var(--accent)]/40 text-[var(--accent)] hover:bg-[var(--accent)]/25 flex items-center gap-1 transition-all"
+                    >
+                      🗺️ Haritada Konum Seç
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-muted-foreground mb-1">Enlem (Latitude)</label>
@@ -561,6 +575,19 @@ export default function KatkilarAdminPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* ── Interactive Map Location Picker Modal ── */}
+      {showMapPicker && (
+        <LocationPickerModal
+          initialLat={editForm?.coordinates?.[0] || 41.0425}
+          initialLng={editForm?.coordinates?.[1] || 29.0075}
+          initialAddress={editForm?.address || editForm?.title || editForm?.eventTitle}
+          onConfirm={(newLat, newLng) => {
+            setEditForm((prev) => (prev ? { ...prev, coordinates: [newLat, newLng] } : { coordinates: [newLat, newLng] }));
+          }}
+          onClose={() => setShowMapPicker(false)}
+        />
       )}
     </div>
   );

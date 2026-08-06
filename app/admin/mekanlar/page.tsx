@@ -20,6 +20,9 @@ import { DeleteDialog } from '@/components/admin/DeleteDialog';
 import { getMekanlar, fetchMekanlar, addMekan, updateMekan, deleteMekan } from '@/lib/admin-store';
 import { PinLocation } from '@/data/besiktasPinData';
 import ImageUploadInput from '@/components/ImageUploadInput';
+import dynamic from 'next/dynamic';
+
+const LocationPickerModal = dynamic(() => import('@/components/admin/LocationPickerModal'), { ssr: false });
 
 const mekanSchema = z.object({
   title: z.string().min(2, 'En az 2 karakter'),
@@ -66,6 +69,7 @@ export default function MekanlarPage() {
   const [mekanlar, setMekanlar] = useState<PinLocation[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
 
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [neighborhoodFilter, setNeighborhoodFilter] = useState<string>("all");
@@ -393,40 +397,50 @@ export default function MekanlarPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="address">Açık Adres</Label>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const titleVal = watch('title') || '';
-                          const addressVal = watch('address') || '';
-                          const neighVal = watch('neighborhood') || '';
-                          const query = `${titleVal} ${addressVal} ${neighVal} Beşiktaş İstanbul`.trim();
-                          if (!query) return alert("Lütfen aramak için mekan adı veya adres yazın.");
-                          try {
-                            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
-                            const data = await res.json();
-                            if (data && data.length > 0) {
-                              const lat = parseFloat(data[0].lat);
-                              const lon = parseFloat(data[0].lon);
-                              setValue('lat', lat);
-                              setValue('lng', lon);
-                              alert(`Konum bulundu! Enlem: ${lat}, Boylam: ${lon}`);
-                            } else {
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowMapPicker(true)}
+                          className="text-[11px] font-bold px-2.5 py-1 rounded bg-[var(--a-primary)]/15 border border-[var(--a-primary)]/40 text-[var(--a-primary)] hover:bg-[var(--a-primary)]/25 flex items-center gap-1 transition-all shadow-sm"
+                          id="open-map-picker-btn"
+                        >
+                          🗺️ Haritada Seç
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const titleVal = watch('title') || '';
+                            const addressVal = watch('address') || '';
+                            const neighVal = watch('neighborhood') || '';
+                            const query = `${titleVal} ${addressVal} ${neighVal} Beşiktaş İstanbul`.trim();
+                            if (!query) return alert("Lütfen aramak için mekan adı veya adres yazın.");
+                            try {
+                              const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                              const data = await res.json();
+                              if (data && data.length > 0) {
+                                const lat = parseFloat(data[0].lat);
+                                const lon = parseFloat(data[0].lon);
+                                setValue('lat', lat);
+                                setValue('lng', lon);
+                                alert(`Konum bulundu! Enlem: ${lat}, Boylam: ${lon}`);
+                              } else {
+                                const fallback = NEIGHBORHOOD_COORDINATES[neighVal] || [41.0425, 29.0075];
+                                setValue('lat', fallback[0]);
+                                setValue('lng', fallback[1]);
+                                alert(`Tam adres bulunamadı, mahalle (${neighVal}) merkez koordinatları atandı.`);
+                              }
+                            } catch (e) {
                               const fallback = NEIGHBORHOOD_COORDINATES[neighVal] || [41.0425, 29.0075];
                               setValue('lat', fallback[0]);
                               setValue('lng', fallback[1]);
-                              alert(`Tam adres bulunamadı, mahalle (${neighVal}) merkez koordinatları atandı.`);
+                              alert("Mahalle merkez koordinatları atandı.");
                             }
-                          } catch (e) {
-                            const fallback = NEIGHBORHOOD_COORDINATES[neighVal] || [41.0425, 29.0075];
-                            setValue('lat', fallback[0]);
-                            setValue('lng', fallback[1]);
-                            alert("Mahalle merkez koordinatları atandı.");
-                          }
-                        }}
-                        className="text-[11px] font-semibold text-[var(--a-primary)] hover:underline flex items-center gap-1"
-                      >
-                        📍 Adresten Konum Bul
-                      </button>
+                          }}
+                          className="text-[11px] font-semibold text-[var(--a-muted)] hover:text-white flex items-center gap-1"
+                        >
+                          📍 Adresten Bul
+                        </button>
+                      </div>
                     </div>
                     <Input id="address" placeholder="Sokak, mahalle ve kapı no" {...register('address')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
                     {errors.address && <p className="text-xs text-red-600">{errors.address.message}</p>}
@@ -487,6 +501,20 @@ export default function MekanlarPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── Interactive Map Location Picker Modal ── */}
+      {showMapPicker && (
+        <LocationPickerModal
+          initialLat={watch('lat')}
+          initialLng={watch('lng')}
+          initialAddress={watch('address') || watch('title')}
+          onConfirm={(newLat, newLng) => {
+            setValue('lat', newLat);
+            setValue('lng', newLng);
+          }}
+          onClose={() => setShowMapPicker(false)}
+        />
+      )}
     </div>
   );
 }
