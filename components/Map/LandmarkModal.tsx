@@ -65,19 +65,23 @@ export default function LandmarkModal({ pin, onClose }: LandmarkModalProps) {
       <div
         className="landmark-backdrop"
         onClick={onClose}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         aria-label="Kapat"
       />
 
       {/* ── 2-Column Landscape Modal ── */}
       <div
-        className="landmark-modal flex flex-col md:grid md:grid-cols-12 overflow-hidden"
+        className="landmark-modal flex flex-col md:grid md:grid-cols-12 overflow-hidden overscroll-contain"
         role="dialog"
         aria-modal="true"
         aria-label={pin.title}
         id={`landmark-modal-${pin.id}`}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
       >
         {/* ── Left Column: Bilgiler (MD: 7 cols) ── */}
-        <div className="md:col-span-7 flex flex-col h-full overflow-y-auto p-6 md:p-8 order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/10">
+        <div className="md:col-span-7 flex flex-col h-full overflow-y-auto overscroll-contain p-6 md:p-8 order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/10">
           
           {/* Category & Era badges */}
           <div className="flex flex-wrap items-center gap-2 mb-4">

@@ -36,6 +36,32 @@ const mekanSchema = z.object({
 });
 type MekanFormData = z.infer<typeof mekanSchema>;
 
+const NEIGHBORHOOD_COORDINATES: Record<string, [number, number]> = {
+  Abbasağa: [41.0460, 29.0040],
+  Akatlar: [41.0900, 29.0200],
+  Arnavutköy: [41.0675, 29.0430],
+  Balmumcu: [41.0590, 29.0110],
+  Bebek: [41.0765, 29.0435],
+  Cihannüma: [41.0445, 29.0045],
+  Dikilitaş: [41.0540, 29.0080],
+  Etiler: [41.0820, 29.0330],
+  Gayrettepe: [41.0680, 29.0070],
+  Konaklar: [41.0870, 29.0170],
+  Kuruçeşme: [41.0600, 29.0350],
+  Kültür: [41.0730, 29.0280],
+  Levazım: [41.0660, 29.0170],
+  Levent: [41.0810, 29.0150],
+  Mecidiye: [41.0495, 29.0230],
+  Muradiye: [41.0475, 29.0005],
+  Nisbetiye: [41.0772, 29.0145],
+  Ortaköy: [41.0475, 29.0270],
+  Sinanpaşa: [41.0425, 29.0065],
+  Türkali: [41.0470, 29.0020],
+  Ulus: [41.0690, 29.0260],
+  Vişnezade: [41.0410, 29.0010],
+  Yıldız: [41.0490, 29.0120],
+};
+
 export default function MekanlarPage() {
   const [mekanlar, setMekanlar] = useState<PinLocation[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -313,7 +339,17 @@ export default function MekanlarPage() {
                         name="neighborhood"
                         control={control}
                         render={({ field }) => (
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={(val) => {
+                              field.onChange(val);
+                              const coords = NEIGHBORHOOD_COORDINATES[val];
+                              if (coords) {
+                                setValue('lat', coords[0]);
+                                setValue('lng', coords[1]);
+                              }
+                            }}
+                          >
                             <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
                               <SelectValue placeholder="Seçin" />
                             </SelectTrigger>
@@ -355,7 +391,43 @@ export default function MekanlarPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="address">Açık Adres</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="address">Açık Adres</Label>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const titleVal = watch('title') || '';
+                          const addressVal = watch('address') || '';
+                          const neighVal = watch('neighborhood') || '';
+                          const query = `${titleVal} ${addressVal} ${neighVal} Beşiktaş İstanbul`.trim();
+                          if (!query) return alert("Lütfen aramak için mekan adı veya adres yazın.");
+                          try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                            const data = await res.json();
+                            if (data && data.length > 0) {
+                              const lat = parseFloat(data[0].lat);
+                              const lon = parseFloat(data[0].lon);
+                              setValue('lat', lat);
+                              setValue('lng', lon);
+                              alert(`Konum bulundu! Enlem: ${lat}, Boylam: ${lon}`);
+                            } else {
+                              const fallback = NEIGHBORHOOD_COORDINATES[neighVal] || [41.0425, 29.0075];
+                              setValue('lat', fallback[0]);
+                              setValue('lng', fallback[1]);
+                              alert(`Tam adres bulunamadı, mahalle (${neighVal}) merkez koordinatları atandı.`);
+                            }
+                          } catch (e) {
+                            const fallback = NEIGHBORHOOD_COORDINATES[neighVal] || [41.0425, 29.0075];
+                            setValue('lat', fallback[0]);
+                            setValue('lng', fallback[1]);
+                            alert("Mahalle merkez koordinatları atandı.");
+                          }
+                        }}
+                        className="text-[11px] font-semibold text-[var(--a-primary)] hover:underline flex items-center gap-1"
+                      >
+                        📍 Adresten Konum Bul
+                      </button>
+                    </div>
                     <Input id="address" placeholder="Sokak, mahalle ve kapı no" {...register('address')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
                     {errors.address && <p className="text-xs text-red-600">{errors.address.message}</p>}
                   </div>
