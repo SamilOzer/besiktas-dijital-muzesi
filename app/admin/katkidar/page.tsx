@@ -585,30 +585,30 @@ export default function KatkilarAdminPage() {
                 </Button>
               </div>
             </DialogFooter>
+
+            {/* ── Interactive Map Location Picker Modal ── */}
+            {showMapPicker && (
+              <LocationPickerModal
+                initialLat={editForm?.coordinates?.[0] || 41.0425}
+                initialLng={editForm?.coordinates?.[1] || 29.0075}
+                initialAddress={editForm?.address || editForm?.title || editForm?.eventTitle}
+                onConfirm={(newLat, newLng, detectedAddress, detectedNeighborhood) => {
+                  setEditForm((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          coordinates: [newLat, newLng],
+                          address: detectedAddress || prev.address,
+                          neighborhood: detectedNeighborhood || prev.neighborhood,
+                        }
+                      : { coordinates: [newLat, newLng], address: detectedAddress, neighborhood: detectedNeighborhood }
+                  );
+                }}
+                onClose={() => setShowMapPicker(false)}
+              />
+            )}
           </DialogContent>
         </Dialog>
-      )}
-
-      {/* ── Interactive Map Location Picker Modal ── */}
-      {showMapPicker && (
-        <LocationPickerModal
-          initialLat={editForm?.coordinates?.[0] || 41.0425}
-          initialLng={editForm?.coordinates?.[1] || 29.0075}
-          initialAddress={editForm?.address || editForm?.title || editForm?.eventTitle}
-          onConfirm={(newLat, newLng, detectedAddress, detectedNeighborhood) => {
-            setEditForm((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    coordinates: [newLat, newLng],
-                    address: detectedAddress || prev.address,
-                    neighborhood: detectedNeighborhood || prev.neighborhood,
-                  }
-                : { coordinates: [newLat, newLng], address: detectedAddress, neighborhood: detectedNeighborhood }
-            );
-          }}
-          onClose={() => setShowMapPicker(false)}
-        />
       )}
     </div>
   );
