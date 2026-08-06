@@ -75,10 +75,10 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       }
 
       const map = L.map(mapRef.current, {
-        center: [41.043, 29.005],
-        zoom: 14.5,
-        minZoom: 13.5,
-        maxZoom: 18,
+        center: [41.0425, 29.0075],
+        zoom: 14,
+        minZoom: 10.5,
+        maxZoom: 19,
         zoomControl: true,
         attributionControl: false,
       });
@@ -210,6 +210,12 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
     clusterGroupRef.current = markersContainer;
   }, [pins, mapReady, zoomLevel]); // re-runs when pins filter changes OR map becomes ready
 
+  const handleRecenter = () => {
+    if (leafletMapRef.current) {
+      leafletMapRef.current.flyTo([41.0425, 29.0075], 14, { duration: 1.2 });
+    }
+  };
+
   return (
     <div className="relative w-full h-full" style={{ minHeight: "100vh" }}>
       <div
@@ -217,17 +223,24 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         id="besiktas-interactive-map"
         className="w-full h-full absolute inset-0"
       />
+
+      {/* Prominent Top-Right Merkeze Dön Button */}
+      <button
+        onClick={handleRecenter}
+        className="absolute top-4 right-4 z-[1000] bg-[#14161d]/95 hover:bg-[#1b1e28] text-[var(--accent)] border border-[var(--accent)]/40 hover:border-[var(--accent)] backdrop-blur-md px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold transition-all hover:scale-105 active:scale-95"
+        title="Beşiktaş Merkezine Odaklan"
+        id="recenter-map-top-btn"
+      >
+        <span className="text-sm">📍</span> Merkeze Dön (Beşiktaş)
+      </button>
       
-      {/* Map Controls: Merkeze Dön & Zoom Level */}
+      {/* Map Controls: Bottom-Right Merkeze Dön & Zoom Level */}
       <div className="absolute bottom-6 right-6 z-[1000] flex items-center gap-3">
         <button
-          onClick={() => {
-            if (leafletMapRef.current) {
-              leafletMapRef.current.flyTo([41.0772, 29.0145], 15.5, { duration: 1.2 });
-            }
-          }}
-          className="bg-[#14161d]/95 hover:bg-[#14161d] text-white border border-white/15 hover:border-[var(--accent)]/50 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
-          title="Merkeze Dön (Beşiktaş Belediye Binası)"
+          onClick={handleRecenter}
+          className="bg-[#14161d]/95 hover:bg-[#1b1e28] text-white border border-white/15 hover:border-[var(--accent)]/50 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+          title="Merkeze Dön (Beşiktaş)"
+          id="recenter-map-bottom-btn"
         >
           <span>🏢</span> Merkeze Dön
         </button>

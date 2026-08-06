@@ -229,6 +229,16 @@ export default function MapFilterPanel({
         </Section>
       </div>
 
+      {/* ─── Panel footer ─── */}
+      <div className="p-3 border-t border-white/10 flex-shrink-0 bg-[#12141a]">
+        <button
+          onClick={onReset}
+          className="w-full py-2.5 px-4 rounded-xl bg-[var(--accent)]/15 border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/25 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
+          id="sidebar-recenter-reset-btn"
+        >
+          <span>📍</span> Filtreleri Sıfırla & Odaklan
+        </button>
+      </div>
     </div>
   );
 }
