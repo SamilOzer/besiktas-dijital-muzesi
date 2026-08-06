@@ -97,6 +97,11 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       leafletMapRef.current = map;
       // Signal that map is ready so the marker effect can run
       setMapReady(true);
+      setTimeout(() => {
+        if (leafletMapRef.current) {
+          leafletMapRef.current.invalidateSize();
+        }
+      }, 250);
     });
 
     return () => {
@@ -120,12 +125,16 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       leafletMapRef.current.removeLayer(clusterGroupRef.current);
     }
 
-    const markers = typeof L.markerClusterGroup === "function"
-      ? L.markerClusterGroup({
-          showCoverageOnHover: false,
-          maxClusterRadius: 40,
-        })
-      : L.layerGroup();
+    const createClusterGroup = (L as any).markerClusterGroup;
+    let markersContainer: any;
+    if (typeof createClusterGroup === "function") {
+      markersContainer = createClusterGroup({
+        showCoverageOnHover: false,
+        maxClusterRadius: 40,
+      });
+    } else {
+      markersContainer = L.layerGroup();
+    }
 
     pins.forEach((pin) => {
       const color = CATEGORY_COLORS[pin.category] ?? "#c5a059";
@@ -163,7 +172,7 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
             "></span>
           </div>
         `,
-        className: "",
+        className: "custom-div-icon",
         iconSize: [size, size],
         iconAnchor: [size / 2, size / 2],
         popupAnchor: [0, -size / 2],
@@ -194,11 +203,11 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         }
       );
 
-      markers.addLayer(marker);
+      markersContainer.addLayer(marker);
     });
     
-    leafletMapRef.current.addLayer(markers);
-    clusterGroupRef.current = markers;
+    leafletMapRef.current.addLayer(markersContainer);
+    clusterGroupRef.current = markersContainer;
   }, [pins, mapReady, zoomLevel]); // re-runs when pins filter changes OR map becomes ready
 
   return (

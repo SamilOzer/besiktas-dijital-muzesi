@@ -196,23 +196,16 @@ body {
   background-size: 200% auto;
 }
 
-/* ─── Leaflet overrides ────────────────────────── */
 .leaflet-container {
   background: #0d0e12 !important;
   font-family: 'Inter', sans-serif;
-  /* Keep Leaflet below our header */
-  z-index: 0 !important;
+  z-index: 1 !important;
+  isolation: isolate;
 }
 
-/* Ensure leaflet map panes never exceed header z-index */
-.leaflet-pane,
-.leaflet-tile-container,
-.leaflet-overlay-pane,
-.leaflet-shadow-pane,
-.leaflet-marker-pane,
-.leaflet-tooltip-pane,
-.leaflet-popup-pane {
-  z-index: auto;
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
 }
 
 .leaflet-control-container {
