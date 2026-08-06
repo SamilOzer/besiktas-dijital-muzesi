@@ -528,9 +528,11 @@ export default function MekanlarPage() {
           initialLat={watch('lat')}
           initialLng={watch('lng')}
           initialAddress={watch('address') || watch('title')}
-          onConfirm={(newLat, newLng) => {
+          onConfirm={(newLat, newLng, detectedAddress, detectedNeighborhood) => {
             setValue('lat', newLat);
             setValue('lng', newLng);
+            if (detectedAddress) setValue('address', detectedAddress);
+            if (detectedNeighborhood) setValue('neighborhood', detectedNeighborhood as any);
           }}
           onClose={() => setShowMapPicker(false)}
         />

@@ -595,8 +595,17 @@ export default function KatkilarAdminPage() {
           initialLat={editForm?.coordinates?.[0] || 41.0425}
           initialLng={editForm?.coordinates?.[1] || 29.0075}
           initialAddress={editForm?.address || editForm?.title || editForm?.eventTitle}
-          onConfirm={(newLat, newLng) => {
-            setEditForm((prev) => (prev ? { ...prev, coordinates: [newLat, newLng] } : { coordinates: [newLat, newLng] }));
+          onConfirm={(newLat, newLng, detectedAddress, detectedNeighborhood) => {
+            setEditForm((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    coordinates: [newLat, newLng],
+                    address: detectedAddress || prev.address,
+                    neighborhood: detectedNeighborhood || prev.neighborhood,
+                  }
+                : { coordinates: [newLat, newLng], address: detectedAddress, neighborhood: detectedNeighborhood }
+            );
           }}
           onClose={() => setShowMapPicker(false)}
         />
