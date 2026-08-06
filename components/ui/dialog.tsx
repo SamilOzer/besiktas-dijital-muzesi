@@ -37,13 +37,13 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-[var(--a-border)] bg-[var(--a-surface)] p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out rounded-xl text-[var(--a-text)]",
+        "fixed left-[50%] top-[50%] z-50 flex flex-col w-full max-h-[90vh] translate-x-[-50%] translate-y-[-50%] border border-[var(--a-border)] bg-[var(--a-surface)] shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out rounded-2xl text-[var(--a-text)] overflow-hidden",
         className
       )}
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground text-[var(--a-text)]">
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1.5 opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring disabled:pointer-events-none hover:bg-white/10 text-[var(--a-text)] z-10">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
@@ -58,7 +58,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "flex flex-col space-y-1.5 px-6 py-4 border-b border-[var(--a-border)] text-left shrink-0 bg-[var(--a-surface)]",
       className
     )}
     {...props}
@@ -72,7 +72,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 px-6 py-4 border-t border-[var(--a-border)] bg-[var(--a-surface)] shrink-0",
       className
     )}
     {...props}

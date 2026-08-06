@@ -181,156 +181,179 @@ export default function MekanlarPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg" style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
+        <DialogContent className="max-w-4xl lg:max-w-5xl p-0 overflow-hidden" style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
           <DialogHeader>
             <DialogTitle>{editingId ? 'Mekân Düzenle' : 'Yeni Mekân Ekle'}</DialogTitle>
+            <p className="text-xs text-[var(--a-muted)]">Harita pinine ait temel bilgileri, konum koordinatlarını ve görselleri güncelleyin.</p>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Mekân Adı</Label>
-              <Input id="title" {...register('title')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-              {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
-            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            {/* Scrollable Form Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* ── Left Column: Temel & Konum Bilgileri ── */}
+                <div className="space-y-4 bg-[var(--a-bg)]/40 p-4 rounded-xl border border-[var(--a-border)]/50">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[var(--a-primary)] pb-1 border-b border-[var(--a-border)]/50 flex items-center gap-1.5">
+                    <span>📍</span> Temel & Konum Bilgileri
+                  </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Kategori</Label>
-                <Controller
-                  name="category"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
-                        <SelectValue placeholder="Seçin" />
-                      </SelectTrigger>
-                      <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-                        <SelectItem value="heykeller">Heykeller</SelectItem>
-                        <SelectItem value="saraylar">Saraylar</SelectItem>
-                        <SelectItem value="tarihi-yapilar">Tarihi Yapılar</SelectItem>
-                        <SelectItem value="spor">Spor</SelectItem>
-                        <SelectItem value="dini-kamusal">Dini & Kamusal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.category && <p className="text-xs text-red-600">{errors.category.message}</p>}
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Mekân Adı</Label>
+                    <Input id="title" placeholder="Örn. Dolmabahçe Sarayı" {...register('title')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                    {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Kategori</Label>
+                      <Controller
+                        name="category"
+                        control={control}
+                        render={({ field }) => (
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
+                              <SelectValue placeholder="Seçin" />
+                            </SelectTrigger>
+                            <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+                              <SelectItem value="heykeller">Heykeller</SelectItem>
+                              <SelectItem value="saraylar">Saraylar</SelectItem>
+                              <SelectItem value="tarihi-yapilar">Tarihi Yapılar</SelectItem>
+                              <SelectItem value="spor">Spor</SelectItem>
+                              <SelectItem value="dini-kamusal">Dini & Kamusal</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.category && <p className="text-xs text-red-600">{errors.category.message}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Dönem</Label>
+                      <Controller
+                        name="timePeriod"
+                        control={control}
+                        render={({ field }) => (
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
+                              <SelectValue placeholder="Seçin" />
+                            </SelectTrigger>
+                            <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+                              <SelectItem value="1400-1600">1400-1600</SelectItem>
+                              <SelectItem value="1600-1800">1600-1800</SelectItem>
+                              <SelectItem value="1800-1850">1800-1850</SelectItem>
+                              <SelectItem value="1850-1900">1850-1900</SelectItem>
+                              <SelectItem value="1900-1960">1900-1960</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.timePeriod && <p className="text-xs text-red-600">{errors.timePeriod.message}</p>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Mahalle</Label>
+                      <Controller
+                        name="neighborhood"
+                        control={control}
+                        render={({ field }) => (
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
+                              <SelectValue placeholder="Seçin" />
+                            </SelectTrigger>
+                            <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+                              <SelectItem value="Abbasağa">Abbasağa</SelectItem>
+                              <SelectItem value="Akatlar">Akatlar</SelectItem>
+                              <SelectItem value="Arnavutköy">Arnavutköy</SelectItem>
+                              <SelectItem value="Balmumcu">Balmumcu</SelectItem>
+                              <SelectItem value="Bebek">Bebek</SelectItem>
+                              <SelectItem value="Cihannüma">Cihannüma</SelectItem>
+                              <SelectItem value="Dikilitaş">Dikilitaş</SelectItem>
+                              <SelectItem value="Etiler">Etiler</SelectItem>
+                              <SelectItem value="Gayrettepe">Gayrettepe</SelectItem>
+                              <SelectItem value="Konaklar">Konaklar</SelectItem>
+                              <SelectItem value="Kuruçeşme">Kuruçeşme</SelectItem>
+                              <SelectItem value="Kültür">Kültür</SelectItem>
+                              <SelectItem value="Levazım">Levazım</SelectItem>
+                              <SelectItem value="Levent">Levent</SelectItem>
+                              <SelectItem value="Mecidiye">Mecidiye</SelectItem>
+                              <SelectItem value="Muradiye">Muradiye</SelectItem>
+                              <SelectItem value="Nisbetiye">Nisbetiye</SelectItem>
+                              <SelectItem value="Ortaköy">Ortaköy</SelectItem>
+                              <SelectItem value="Sinanpaşa">Sinanpaşa</SelectItem>
+                              <SelectItem value="Türkali">Türkali</SelectItem>
+                              <SelectItem value="Ulus">Ulus</SelectItem>
+                              <SelectItem value="Vişnezade">Vişnezade</SelectItem>
+                              <SelectItem value="Yıldız">Yıldız</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.neighborhood && <p className="text-xs text-red-600">{errors.neighborhood.message}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="era">Dönem Metni (Opsiyonel)</Label>
+                      <Input id="era" placeholder="Örn. 19. Yüzyıl" {...register('era')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Açık Adres</Label>
+                    <Input id="address" placeholder="Sokak, mahalle ve kapı no" {...register('address')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                    {errors.address && <p className="text-xs text-red-600">{errors.address.message}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="lat">Enlem (Latitude)</Label>
+                      <Input id="lat" type="number" step="any" placeholder="41.043" {...register('lat')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                      {errors.lat && <p className="text-xs text-red-600">{errors.lat.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lng">Boylam (Longitude)</Label>
+                      <Input id="lng" type="number" step="any" placeholder="29.005" {...register('lng')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                      {errors.lng && <p className="text-xs text-red-600">{errors.lng.message}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Right Column: İçerik & Görseller ── */}
+                <div className="space-y-4 bg-[var(--a-bg)]/40 p-4 rounded-xl border border-[var(--a-border)]/50">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[var(--a-primary)] pb-1 border-b border-[var(--a-border)]/50 flex items-center gap-1.5">
+                    <span>📝</span> İçerik & Görseller
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="summary">Özet Bilgi</Label>
+                    <Textarea id="summary" rows={3} placeholder="Mekân hakkında kısa özet..." {...register('summary')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                    {errors.summary && <p className="text-xs text-red-600">{errors.summary.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Detaylı Tarihçe & Açıklama</Label>
+                    <Textarea id="description" rows={4} placeholder="Detaylı tarihi ve mimari bilgiler..." {...register('description')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Fotoğraflar</Label>
+                    <ImageUploadInput
+                      images={images}
+                      onChange={(imgs) => setValue('images', imgs)}
+                    />
+                  </div>
+                </div>
+
               </div>
-
-              <div className="space-y-2">
-                <Label>Dönem</Label>
-                <Controller
-                  name="timePeriod"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
-                        <SelectValue placeholder="Seçin" />
-                      </SelectTrigger>
-                      <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-                        <SelectItem value="1400-1600">1400-1600</SelectItem>
-                        <SelectItem value="1600-1800">1600-1800</SelectItem>
-                        <SelectItem value="1800-1850">1800-1850</SelectItem>
-                        <SelectItem value="1850-1900">1850-1900</SelectItem>
-                        <SelectItem value="1900-1960">1900-1960</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.timePeriod && <p className="text-xs text-red-600">{errors.timePeriod.message}</p>}
-              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Mahalle</Label>
-                <Controller
-                  name="neighborhood"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
-                        <SelectValue placeholder="Seçin" />
-                      </SelectTrigger>
-                      <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-                        <SelectItem value="Abbasağa">Abbasağa</SelectItem>
-                        <SelectItem value="Akatlar">Akatlar</SelectItem>
-                        <SelectItem value="Arnavutköy">Arnavutköy</SelectItem>
-                        <SelectItem value="Balmumcu">Balmumcu</SelectItem>
-                        <SelectItem value="Bebek">Bebek</SelectItem>
-                        <SelectItem value="Cihannüma">Cihannüma</SelectItem>
-                        <SelectItem value="Dikilitaş">Dikilitaş</SelectItem>
-                        <SelectItem value="Etiler">Etiler</SelectItem>
-                        <SelectItem value="Gayrettepe">Gayrettepe</SelectItem>
-                        <SelectItem value="Konaklar">Konaklar</SelectItem>
-                        <SelectItem value="Kuruçeşme">Kuruçeşme</SelectItem>
-                        <SelectItem value="Kültür">Kültür</SelectItem>
-                        <SelectItem value="Levazım">Levazım</SelectItem>
-                        <SelectItem value="Levent">Levent</SelectItem>
-                        <SelectItem value="Mecidiye">Mecidiye</SelectItem>
-                        <SelectItem value="Muradiye">Muradiye</SelectItem>
-                        <SelectItem value="Nisbetiye">Nisbetiye</SelectItem>
-                        <SelectItem value="Ortaköy">Ortaköy</SelectItem>
-                        <SelectItem value="Sinanpaşa">Sinanpaşa</SelectItem>
-                        <SelectItem value="Türkali">Türkali</SelectItem>
-                        <SelectItem value="Ulus">Ulus</SelectItem>
-                        <SelectItem value="Vişnezade">Vişnezade</SelectItem>
-                        <SelectItem value="Yıldız">Yıldız</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.neighborhood && <p className="text-xs text-red-600">{errors.neighborhood.message}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="era">Dönem (Opsiyonel Metin)</Label>
-                <Input id="era" {...register('era')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="address">Adres</Label>
-              <Input id="address" {...register('address')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-              {errors.address && <p className="text-xs text-red-600">{errors.address.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="summary">Özet Bilgi</Label>
-              <Textarea id="summary" rows={3} {...register('summary')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-              {errors.summary && <p className="text-xs text-red-600">{errors.summary.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Açıklama</Label>
-              <Textarea id="description" rows={4} {...register('description')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="lat">Enlem</Label>
-                <Input id="lat" type="number" step="any" {...register('lat')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-                {errors.lat && <p className="text-xs text-red-600">{errors.lat.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lng">Boylam</Label>
-                <Input id="lng" type="number" step="any" {...register('lng')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-                {errors.lng && <p className="text-xs text-red-600">{errors.lng.message}</p>}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Fotoğraflar</Label>
-              <ImageUploadInput
-                images={images}
-                onChange={(imgs) => setValue('images', imgs)}
-              />
-            </div>
-
+            {/* Sticky Footer with Save & Cancel Buttons */}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} style={{ borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
                 İptal
               </Button>
-              <Button type="submit" style={{ backgroundColor: 'var(--a-primary)', color: 'var(--a-bg)' }}>
+              <Button type="submit" style={{ backgroundColor: 'var(--a-primary)', color: 'var(--a-bg)' }} className="px-6 font-semibold shadow-md">
                 Kaydet
               </Button>
             </DialogFooter>

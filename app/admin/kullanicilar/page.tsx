@@ -179,67 +179,69 @@ export default function KullanicilarPage() {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md" style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
+        <DialogContent className="max-w-md p-0 overflow-hidden" style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
           <DialogHeader>
             <DialogTitle>{editingId ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Ekle'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Ad Soyad</Label>
-              <Input id="name" {...register('name')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-              {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
-              <Input id="email" type="email" {...register('email')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-              {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="space-y-2">
-                <Label>Rol</Label>
-                <Controller
-                  name="role"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
-                        <SelectValue placeholder="Seçin" />
-                      </SelectTrigger>
-                      <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="editor">Editör</SelectItem>
-                        <SelectItem value="viewer">Görüntüleyici</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.role && <p className="text-xs text-red-600">{errors.role.message}</p>}
+                <Label htmlFor="name">Ad Soyad</Label>
+                <Input id="name" {...register('name')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label>Durum</Label>
-                <Controller
-                  name="status"
-                  control={control}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
-                        <SelectValue placeholder="Seçin" />
-                      </SelectTrigger>
-                      <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-                        <SelectItem value="active">Aktif</SelectItem>
-                        <SelectItem value="inactive">Pasif</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.status && <p className="text-xs text-red-600">{errors.status.message}</p>}
+                <Label htmlFor="email">E-posta</Label>
+                <Input id="email" type="email" {...register('email')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Rol</Label>
+                  <Controller
+                    name="role"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
+                          <SelectValue placeholder="Seçin" />
+                        </SelectTrigger>
+                        <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="editor">Editör</SelectItem>
+                          <SelectItem value="viewer">Görüntüleyici</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.role && <p className="text-xs text-red-600">{errors.role.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Durum</Label>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }}>
+                          <SelectValue placeholder="Seçin" />
+                        </SelectTrigger>
+                        <SelectContent style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+                          <SelectItem value="active">Aktif</SelectItem>
+                          <SelectItem value="inactive">Pasif</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.status && <p className="text-xs text-red-600">{errors.status.message}</p>}
+                </div>
               </div>
             </div>
 
-            <DialogFooter className="mt-6">
+            <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} style={{ borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
                 İptal
               </Button>
