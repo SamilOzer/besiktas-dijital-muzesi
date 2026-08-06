@@ -45,7 +45,26 @@ const getInitialMekanlar = (): PinLocation[] => {
 let mekanlar: PinLocation[] = getInitialMekanlar();
 
 // ─── Mock Ansiklopedi ─────────────────────────────────────────────────────────
-let olaylar: HistoricalEvent[] = [...ansiklopediData];
+const getInitialOlaylar = (): HistoricalEvent[] => {
+  if (typeof window === "undefined") return [...ansiklopediData];
+  try {
+    const data = localStorage.getItem("besiktas_olaylar_db");
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.error("Failed to load initial olaylar from localStorage:", e);
+  }
+  return [...ansiklopediData];
+};
+
+let olaylar: HistoricalEvent[] = getInitialOlaylar();
+
+const notifyDataUpdated = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("besiktas_data_updated"));
+  }
+};
 
 // ─── Mock Stats ───────────────────────────────────────────────────────────────
 export const monthlyVisits = [
@@ -96,6 +115,7 @@ export const fetchMekanlar = async (): Promise<PinLocation[]> => {
 export const addMekan = (item: PinLocation) => {
   mekanlar = [...mekanlar, item];
   updateCategoryStats();
+  notifyDataUpdated();
   // Async background sync with Supabase and localStorage
   savePinToDb(item).catch((err: any) => console.error("Error saving pin to database:", err));
   return item;
@@ -104,6 +124,7 @@ export const addMekan = (item: PinLocation) => {
 export const updateMekan = (id: string, updates: Partial<PinLocation>) => {
   mekanlar = mekanlar.map((m) => (m.id === id ? { ...m, ...updates } : m));
   updateCategoryStats();
+  notifyDataUpdated();
   const updated = mekanlar.find((m) => m.id === id) ?? null;
   if (updated) {
     savePinToDb(updated).catch((err: any) => console.error("Error updating pin in database:", err));
@@ -114,6 +135,7 @@ export const updateMekan = (id: string, updates: Partial<PinLocation>) => {
 export const deleteMekan = (id: string) => {
   mekanlar = mekanlar.filter((m) => m.id !== id);
   updateCategoryStats();
+  notifyDataUpdated();
   deletePinFromDb(id).catch((err: any) => console.error("Error deleting pin from database:", err));
 };
 
@@ -134,6 +156,7 @@ export const fetchOlaylar = async (): Promise<HistoricalEvent[]> => {
 
 export const addOlay = (item: HistoricalEvent) => {
   olaylar = [...olaylar, item];
+  notifyDataUpdated();
   // Async background sync with Supabase
   saveOlayToDb(item).catch((err: any) => console.error("Error saving olay to database:", err));
   return item;
@@ -141,6 +164,7 @@ export const addOlay = (item: HistoricalEvent) => {
 
 export const updateOlay = (id: string, updates: Partial<HistoricalEvent>) => {
   olaylar = olaylar.map((o) => (o.id === id ? { ...o, ...updates } : o));
+  notifyDataUpdated();
   const updated = olaylar.find((o) => o.id === id) ?? null;
   if (updated) {
     saveOlayToDb(updated).catch((err: any) => console.error("Error updating olay in database:", err));
@@ -150,6 +174,7 @@ export const updateOlay = (id: string, updates: Partial<HistoricalEvent>) => {
 
 export const deleteOlay = (id: string) => {
   olaylar = olaylar.filter((o) => o.id !== id);
+  notifyDataUpdated();
   deleteOlayFromDb(id).catch((err: any) => console.error("Error deleting olay from database:", err));
 };
 

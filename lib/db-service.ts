@@ -22,11 +22,18 @@ const getLocalMekanlar = (): PinLocation[] => {
   }
 };
 
+const notifyDataChanged = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('besiktas_data_updated'));
+  }
+};
+
 // Helper to save local data
 const saveLocalMekanlar = (items: PinLocation[]) => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+    notifyDataChanged();
   } catch (error) {
     console.error('Failed to save to local storage', error);
   }
@@ -37,7 +44,10 @@ const getLocalOlaylar = (): HistoricalEvent[] => {
   if (typeof window === 'undefined') return [...ansiklopediData];
   try {
     const data = localStorage.getItem(LOCAL_STORAGE_OLAYLAR_KEY);
-    if (!data) return [...ansiklopediData];
+    if (!data) {
+      localStorage.setItem(LOCAL_STORAGE_OLAYLAR_KEY, JSON.stringify(ansiklopediData));
+      return [...ansiklopediData];
+    }
     return JSON.parse(data);
   } catch (error) {
     console.error('Failed to parse local storage olaylar', error);
@@ -50,6 +60,7 @@ const saveLocalOlaylar = (items: HistoricalEvent[]) => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_OLAYLAR_KEY, JSON.stringify(items));
+    notifyDataChanged();
   } catch (error) {
     console.error('Failed to save to local storage olaylar', error);
   }

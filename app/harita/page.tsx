@@ -33,9 +33,17 @@ export default function HaritaPage() {
         console.error("Error loading pins:", e);
       }
     };
+
     loadPins();
+
+    const handleUpdate = () => loadPins();
+    window.addEventListener("besiktas_data_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("besiktas_data_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
     };
   }, []);
 

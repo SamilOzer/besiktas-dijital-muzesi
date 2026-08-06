@@ -221,9 +221,17 @@ export default function AnsiklopediPage() {
         }
       }
     };
+
     loadEvents();
+
+    const handleUpdate = () => loadEvents();
+    window.addEventListener("besiktas_data_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
     return () => {
       isMounted = false;
+      window.removeEventListener("besiktas_data_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
     };
   }, []);
 
