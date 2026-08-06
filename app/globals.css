@@ -208,6 +208,25 @@ body {
   border: none !important;
 }
 
+/* ─── Glowing Marker Cluster for Dark Map ─── */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(197, 160, 89, 0.25) !important;
+  border: 2px solid #c5a059 !important;
+  box-shadow: 0 0 20px rgba(197, 160, 89, 0.6), 0 4px 12px rgba(0,0,0,0.8) !important;
+  border-radius: 50% !important;
+}
+
+.marker-cluster div {
+  background-color: #14161d !important;
+  color: #c5a059 !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  font-family: 'Inter', sans-serif !important;
+  border-radius: 50% !important;
+}
+
 .leaflet-control-container {
   /* Push zoom controls below header */
   position: absolute !important;

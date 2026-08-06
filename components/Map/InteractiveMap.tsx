@@ -130,7 +130,9 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
     if (typeof createClusterGroup === "function") {
       markersContainer = createClusterGroup({
         showCoverageOnHover: false,
-        maxClusterRadius: 40,
+        maxClusterRadius: 55,
+        disableClusteringAtZoom: 16,
+        spiderfyOnMaxZoom: true,
       });
     } else {
       markersContainer = L.layerGroup();
@@ -140,35 +142,40 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       const color = CATEGORY_COLORS[pin.category] ?? "#c5a059";
       const icon = CATEGORY_ICONS[pin.category] ?? "📍";
 
-      let size = 36;
-      if (zoomLevel <= 12) size = 28;
-      else if (zoomLevel === 13) size = 32;
-      else if (zoomLevel === 14) size = 36;
+      let size = 34;
+      if (zoomLevel <= 11) size = 16;
+      else if (zoomLevel === 12) size = 20;
+      else if (zoomLevel === 13) size = 26;
+      else if (zoomLevel === 14) size = 34;
       else if (zoomLevel === 15) size = 40;
-      else if (zoomLevel >= 16) size = 44;
+      else if (zoomLevel >= 16) size = 46;
+
+      const showEmoji = size >= 24;
 
       const divIcon = L.divIcon({
         html: `
           <div style="
             width:${size}px;height:${size}px;
             border-radius:50%;
-            background:${color}28;
-            border:2px solid ${color};
+            background: radial-gradient(circle at 35% 35%, ${color}, ${color}dd);
+            border: 2px solid #ffffff;
             display:flex;align-items:center;justify-content:center;
-            font-size:${size * 0.45}px;
+            font-size:${size * 0.48}px;
             cursor:pointer;
-            box-shadow:0 4px 20px rgba(0,0,0,0.7);
+            box-shadow: 0 0 14px ${color}dd, 0 0 28px ${color}77, 0 6px 16px rgba(0,0,0,0.85);
             position:relative;
+            transition: transform 0.2s ease;
           ">
-            ${icon}
+            ${showEmoji ? icon : `<span style="width:6px;height:6px;border-radius:50%;background:#ffffff;"></span>`}
             <span style="
               position:absolute;
               inset:-6px;
               border-radius:50%;
               border:1.5px solid ${color};
               animation:pulse-ring 2.5s cubic-bezier(0.215,0.61,0.355,1) infinite;
-              opacity:0.5;
+              opacity:0.6;
               pointer-events:none;
+              box-shadow: 0 0 10px ${color}99;
             "></span>
           </div>
         `,
