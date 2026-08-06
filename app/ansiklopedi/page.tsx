@@ -25,6 +25,8 @@ const ERA_COLORS: Record<string, string> = {
 
 function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () => void }) {
   const eraColor = ERA_COLORS[event.era] ?? "#c5a059";
+  const eventImages = (event.images && event.images.length > 0 ? event.images : [event.image]).filter(Boolean);
+  const [imgIdx, setImgIdx] = useState(0);
 
   return (
     <>
@@ -42,10 +44,10 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
       >
         {/* Image */}
         <div className="relative h-64 bg-[#0a0b0e] overflow-hidden rounded-t-[20px]">
-          {event.image ? (
+          {eventImages.length > 0 ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={event.image}
+              src={eventImages[imgIdx]}
               alt={event.title}
               className="w-full h-full object-cover"
               loading="lazy"
@@ -68,7 +70,7 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/90 transition-colors"
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/90 transition-colors z-10"
             id={`event-modal-close-${event.id}`}
             aria-label="Kapat"
           >
@@ -248,6 +250,7 @@ export default function AnsiklopediPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {filtered.map((event) => {
               const eraColor = ERA_COLORS[event.era] ?? "#c5a059";
+              const cardImage = event.image || event.images?.[0];
               return (
                 <button
                   key={event.id}
@@ -256,17 +259,17 @@ export default function AnsiklopediPage() {
                   onClick={() => setActiveEvent(event)}
                 >
                   {/* Card image */}
-                  {event.image && (
+                  {cardImage ? (
                     <div className="w-full h-44 rounded-xl overflow-hidden mb-4 bg-[#0a0b0e]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={event.image}
+                        src={cardImage}
                         alt={event.title}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         loading="lazy"
                       />
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Era badge */}
                   <div className="flex flex-wrap items-center gap-2 mb-3">

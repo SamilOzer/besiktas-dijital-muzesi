@@ -82,6 +82,9 @@ export default function AnsiklopediPage() {
 
   const openEditDialog = (row: HistoricalEvent) => {
     setEditingId(row.id);
+    const existingImages = row.images && row.images.length > 0
+      ? row.images
+      : (row.image ? [row.image] : []);
     reset({
       title: row.title,
       date: row.date,
@@ -92,31 +95,34 @@ export default function AnsiklopediPage() {
       description: (row as any).description || '',
       location: row.location || '',
       tags: row.tags.join(', '),
-      images: row.images || [],
+      images: existingImages,
     });
     setDialogOpen(true);
   };
 
   const onSubmit = (data: OlayFormData) => {
     const tagsArray = data.tags.split(',').map(t => t.trim()).filter(Boolean);
-    
+    const validImages = data.images?.filter(img => img.trim() !== '') || [];
+    const primaryImage = validImages[0] || '';
+
     if (editingId) {
       updateOlay(editingId, {
         ...data,
         tags: tagsArray,
+        image: primaryImage,
+        images: validImages,
         fullText: data.summary,
         description: data.description,
-        images: data.images?.filter(img => img.trim() !== '') || [],
       });
     } else {
       addOlay({
         id: Date.now().toString(),
         ...data,
         tags: tagsArray,
-        image: '',
+        image: primaryImage,
+        images: validImages,
         fullText: data.summary,
         description: data.description,
-        images: data.images?.filter(img => img.trim() !== '') || [],
       });
     }
     setOlaylar(getOlaylar());
