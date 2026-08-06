@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -143,6 +143,17 @@ export default function AnsiklopediPage() {
     }
   };
 
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [eraFilter, setEraFilter] = useState<string>("all");
+
+  const filteredOlaylar = useMemo(() => {
+    return olaylar.filter((row) => {
+      const catOk = categoryFilter === "all" || row.category === categoryFilter;
+      const eraOk = eraFilter === "all" || row.era === eraFilter;
+      return catOk && eraOk;
+    });
+  }, [olaylar, categoryFilter, eraFilter]);
+
   const columns: Column<HistoricalEvent>[] = [
     { key: 'title', label: 'Başlık', sortable: true, render: (row) => <div className="font-medium" style={{ color: 'var(--a-text)' }}>{row.title}</div> },
     { key: 'category', label: 'Kategori', render: (row) => <Badge variant={getCategoryVariant(row.category) as any}>{row.categoryLabel}</Badge> },
@@ -153,7 +164,7 @@ export default function AnsiklopediPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 style={{ color: 'var(--a-text)', fontSize: '1.5rem', fontWeight: 600 }}>Ansiklopedi</h2>
           <p style={{ color: 'var(--a-muted)' }}>Tarihi olayları yönetin</p>
@@ -165,8 +176,38 @@ export default function AnsiklopediPage() {
 
       <Card style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
         <CardContent className="p-6">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            {/* Category Filter */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="bg-[#14161d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none"
+            >
+              <option value="all">Tüm Kategoriler</option>
+              <option value="siyasi">Siyasi</option>
+              <option value="askeri">Askeri</option>
+              <option value="kulturel">Kültürel</option>
+              <option value="toplumsal">Toplumsal</option>
+              <option value="spor">Spor</option>
+              <option value="mimari">Mimari</option>
+            </select>
+
+            {/* Era Filter */}
+            <select
+              value={eraFilter}
+              onChange={(e) => setEraFilter(e.target.value)}
+              className="bg-[#14161d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none"
+            >
+              <option value="all">Tüm Dönemler</option>
+              <option value="19. Yüzyıl">19. Yüzyıl</option>
+              <option value="20. Yüzyıl">20. Yüzyıl</option>
+              <option value="Cumhuriyet Dönemi">Cumhuriyet Dönemi</option>
+              <option value="Osmanlı Dönemi">Osmanlı Dönemi</option>
+            </select>
+          </div>
+
           <DataTable
-            data={olaylar}
+            data={filteredOlaylar}
             columns={columns}
             searchKeys={['title', 'summary', 'location', 'date']}
             actions={(row) => (

@@ -24,6 +24,7 @@ import { Mail, MailOpen, Trash2, Eye } from "lucide-react";
 export default function MesajlarAdminPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [activeMessage, setActiveMessage] = useState<ContactMessage | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const loadData = () => {
     setMessages(getContactMessages());
@@ -32,6 +33,10 @@ export default function MesajlarAdminPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const filteredMessages = messages.filter((m) => {
+    return statusFilter === "all" || m.status === statusFilter;
+  });
 
   const handleView = (msg: ContactMessage) => {
     setActiveMessage(msg);
@@ -118,14 +123,29 @@ export default function MesajlarAdminPage() {
 
       <Card className="bg-[var(--a-surface)] border-[var(--a-border)] shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg text-[var(--a-text)]">Gelen Mesajlar</CardTitle>
-          <CardDescription className="text-[var(--a-muted)]">
-            Toplam {messages.length} mesaj ({messages.filter((m) => m.status === "unread").length} okunmamış)
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-lg text-[var(--a-text)]">Gelen Mesajlar</CardTitle>
+              <CardDescription className="text-[var(--a-muted)]">
+                Toplam {filteredMessages.length} mesaj ({messages.filter((m) => m.status === "unread").length} okunmamış)
+              </CardDescription>
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-[#14161d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none"
+            >
+              <option value="all">Tüm Mesajlar</option>
+              <option value="unread">Okunmayanlar</option>
+              <option value="read">Okunanlar</option>
+            </select>
+          </div>
         </CardHeader>
         <CardContent>
           <DataTable
-            data={messages}
+            data={filteredMessages}
             columns={columns}
             searchKeys={["name", "email", "message"]}
             actions={(m) => (

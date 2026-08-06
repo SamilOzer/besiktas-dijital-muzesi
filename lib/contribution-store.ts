@@ -92,6 +92,18 @@ export function addContribution(c: Omit<Contribution, 'id' | 'status' | 'submitt
   return newC;
 }
 
+export function updateContribution(id: string, updatedData: Partial<Contribution>): Contribution | null {
+  const current = loadContributions();
+  const index = current.findIndex(x => x.id === id);
+  if (index !== -1) {
+    current[index] = { ...current[index], ...updatedData };
+    saveContributions(current);
+    contributions = current;
+    return current[index];
+  }
+  return null;
+}
+
 export function updateContributionStatus(id: string, status: 'approved' | 'rejected'): Contribution | null {
   const current = loadContributions();
   const c = current.find(x => x.id === id);

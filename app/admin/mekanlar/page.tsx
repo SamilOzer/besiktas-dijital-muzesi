@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -41,6 +41,10 @@ export default function MekanlarPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [neighborhoodFilter, setNeighborhoodFilter] = useState<string>("all");
+  const [timePeriodFilter, setTimePeriodFilter] = useState<string>("all");
+
   useEffect(() => {
     let isMounted = true;
     const loadMekanlar = async () => {
@@ -55,19 +59,28 @@ export default function MekanlarPage() {
     };
   }, []);
 
+  const filteredMekanlar = useMemo(() => {
+    return mekanlar.filter((row) => {
+      const catOk = categoryFilter === "all" || row.category === categoryFilter;
+      const neighOk = neighborhoodFilter === "all" || row.neighborhood === neighborhoodFilter;
+      const timeOk = timePeriodFilter === "all" || row.timePeriod === timePeriodFilter;
+      return catOk && neighOk && timeOk;
+    });
+  }, [mekanlar, categoryFilter, neighborhoodFilter, timePeriodFilter]);
+
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<MekanFormData>({
     resolver: zodResolver(mekanSchema),
     defaultValues: {
       title: '',
-      category: 'heykeller',
+      category: 'tarihi-yapilar',
       timePeriod: '1900-1960',
       neighborhood: 'Sinanpaşa',
       address: '',
       summary: '',
       description: '',
       era: '',
-      lat: 41.043,
-      lng: 29.005,
+      lat: 41.0422,
+      lng: 29.0067,
       images: [],
     }
   });
@@ -160,8 +173,50 @@ export default function MekanlarPage() {
 
       <Card style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
         <CardContent className="p-6">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            {/* Category Filter */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="bg-[#14161d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none"
+            >
+              <option value="all">Tüm Kategoriler</option>
+              <option value="saraylar">Saraylar & Kasırlar</option>
+              <option value="heykeller">Heykeller & Anıtlar</option>
+              <option value="tarihi-yapilar">Tarihi Yapılar</option>
+              <option value="dini-kamusal">Dini & Kamusal Yapılar</option>
+              <option value="spor">Spor & Kültür</option>
+            </select>
+
+            {/* Neighborhood Filter */}
+            <select
+              value={neighborhoodFilter}
+              onChange={(e) => setNeighborhoodFilter(e.target.value)}
+              className="bg-[#14161d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none"
+            >
+              <option value="all">Tüm Mahalleler</option>
+              {['Abbasağa','Akatlar','Arnavutköy','Balmumcu','Bebek','Cihannüma','Dikilitaş','Etiler','Gayrettepe','Konaklar','Kuruçeşme','Kültür','Levazım','Levent','Mecidiye','Muradiye','Nisbetiye','Ortaköy','Sinanpaşa','Türkali','Ulus','Vişnezade','Yıldız'].map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+
+            {/* Time Period Filter */}
+            <select
+              value={timePeriodFilter}
+              onChange={(e) => setTimePeriodFilter(e.target.value)}
+              className="bg-[#14161d] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none"
+            >
+              <option value="all">Tüm Dönemler</option>
+              <option value="1400-1600">1400-1600</option>
+              <option value="1600-1800">1600-1800</option>
+              <option value="1800-1850">1800-1850</option>
+              <option value="1850-1900">1850-1900</option>
+              <option value="1900-1960">1900-1960</option>
+            </select>
+          </div>
+
           <DataTable
-            data={mekanlar}
+            data={filteredMekanlar}
             columns={columns}
             searchKeys={['title', 'address', 'neighborhood']}
             actions={(row) => (
