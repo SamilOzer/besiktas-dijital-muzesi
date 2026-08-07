@@ -5,6 +5,23 @@ import { ansiklopediData, HistoricalEvent } from '@/data/ansiklopediData';
 const LOCAL_STORAGE_KEY = 'besiktas_mekanlar_db';
 const LOCAL_STORAGE_OLAYLAR_KEY = 'besiktas_olaylar_db';
 
+// Cache Supabase failures — skip retries for 5 minutes after a failure
+let supabaseFailedAt: number | null = null;
+const SUPABASE_RETRY_DELAY_MS = 5 * 60 * 1000; // 5 minutes
+
+const isSupabaseAvailable = (): boolean => {
+  if (!isSupabaseConfigured || !supabase) return false;
+  if (supabaseFailedAt && (Date.now() - supabaseFailedAt < SUPABASE_RETRY_DELAY_MS)) {
+    return false;
+  }
+  return true;
+};
+
+const markSupabaseFailed = () => {
+  supabaseFailedAt = Date.now();
+  console.warn('[db-service] Supabase marked as unavailable for 5 minutes');
+};
+
 const VALID_CATEGORIES = ["heykeller", "saraylar", "tarihi-yapilar", "spor", "dini-kamusal"];
 
 export const normalizePinData = (pin: PinLocation): PinLocation => {
@@ -113,17 +130,18 @@ const saveLocalOlaylar = (items: HistoricalEvent[]) => {
  */
 export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
   const localList = getLocalMekanlar();
-  console.log('[db-service] fetchPinsFromDb: localList has', localList.length, 'pins. Supabase configured:', isSupabaseConfigured);
+  console.log('[db-service] fetchPinsFromDb: localList has', localList.length, 'pins. Supabase available:', isSupabaseAvailable());
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseAvailable()) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('mekanlar')
         .select('*')
         .order('title', { ascending: true });
 
       if (error) {
         console.warn('[db-service] Supabase query error:', error.message);
+        markSupabaseFailed();
       }
 
       if (!error && data && data.length > 0) {
@@ -154,6 +172,7 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
       }
     } catch (e) {
       console.warn('[db-service] Network error, falling back to local storage:', e);
+      markSupabaseFailed();
     }
   }
   console.log('[db-service] Returning', localList.length, 'pins from localStorage');
@@ -175,9 +194,9 @@ export const savePinToDb = async (pin: PinLocation): Promise<PinLocation> => {
   }
   saveLocalMekanlar(localList);
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseAvailable()) {
     try {
-      const { error } = await supabase
+      const { error } = await supabase!
         .from('mekanlar')
         .upsert({
           id: normalizedPin.id,
@@ -197,9 +216,11 @@ export const savePinToDb = async (pin: PinLocation): Promise<PinLocation> => {
 
       if (error) {
         console.error('Supabase upsert error:', error.message);
+        markSupabaseFailed();
       }
     } catch (e) {
       console.error('Network error during Supabase upsert:', e);
+      markSupabaseFailed();
     }
   }
 
@@ -214,18 +235,20 @@ export const deletePinFromDb = async (id: string): Promise<void> => {
   const localList = getLocalMekanlar().filter((item) => item.id !== id);
   saveLocalMekanlar(localList);
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseAvailable()) {
     try {
-      const { error } = await supabase
+      const { error } = await supabase!
         .from('mekanlar')
         .delete()
         .eq('id', id);
 
       if (error) {
         console.error('Supabase delete error:', error.message);
+        markSupabaseFailed();
       }
     } catch (e) {
       console.error('Network error during Supabase delete:', e);
+      markSupabaseFailed();
     }
   }
 };
@@ -237,12 +260,16 @@ export const deletePinFromDb = async (id: string): Promise<void> => {
 export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
   const localList = getLocalOlaylar();
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseAvailable()) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('olaylar')
         .select('*')
         .order('date', { ascending: false });
+
+      if (error) {
+        markSupabaseFailed();
+      }
 
       if (!error && data && data.length > 0) {
         const dbOlaylar = data.map((item: any) => ({
@@ -263,6 +290,7 @@ export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
       }
     } catch (e) {
       console.warn('Network error fetching olaylar, falling back to local storage:', e);
+      markSupabaseFailed();
     }
   }
   return localList;
@@ -282,9 +310,9 @@ export const saveOlayToDb = async (olay: HistoricalEvent): Promise<HistoricalEve
   }
   saveLocalOlaylar(localList);
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseAvailable()) {
     try {
-      const { error } = await supabase
+      const { error } = await supabase!
         .from('olaylar')
         .upsert({
           id: olay.id,
@@ -304,9 +332,11 @@ export const saveOlayToDb = async (olay: HistoricalEvent): Promise<HistoricalEve
 
       if (error) {
         console.error('Supabase upsert olay error:', error.message);
+        markSupabaseFailed();
       }
     } catch (e) {
       console.error('Network error during Supabase upsert olay:', e);
+      markSupabaseFailed();
     }
   }
 
@@ -321,18 +351,20 @@ export const deleteOlayFromDb = async (id: string): Promise<void> => {
   const localList = getLocalOlaylar().filter((item) => item.id !== id);
   saveLocalOlaylar(localList);
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseAvailable()) {
     try {
-      const { error } = await supabase
+      const { error } = await supabase!
         .from('olaylar')
         .delete()
         .eq('id', id);
 
       if (error) {
         console.error('Supabase delete olay error:', error.message);
+        markSupabaseFailed();
       }
     } catch (e) {
       console.error('Network error during Supabase delete olay:', e);
+      markSupabaseFailed();
     }
   }
 };
