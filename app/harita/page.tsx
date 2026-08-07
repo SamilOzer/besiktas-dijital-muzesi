@@ -1,10 +1,10 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import LandmarkModal from "@/components/Map/LandmarkModal";
 import MapFilterPanel from "@/components/Map/MapFilterPanel";
-import { PinLocation } from "@/data/besiktasPinData";
-import { fetchPinsFromDb } from "@/lib/db-service";
+import { PinLocation, besiktasPinData } from "@/data/besiktasPinData";
+import { normalizePinData } from "@/lib/db-service";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 // Leaflet must be client-only
@@ -12,6 +12,41 @@ const InteractiveMap = dynamic(
   () => import("@/components/Map/InteractiveMap"),
   { ssr: false }
 );
+
+const STORAGE_KEY = "besiktas_mekanlar_db";
+
+/**
+ * Reads ALL mekanlar directly from localStorage + besiktasPinData defaults.
+ * No Supabase, no db-service, no async — guaranteed to return every pin.
+ */
+function loadAllPins(): PinLocation[] {
+  let stored: PinLocation[] = [];
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        stored = parsed;
+      }
+    }
+  } catch (e) {
+    console.warn("[harita] Failed to read localStorage:", e);
+  }
+
+  // Merge: start with localStorage, guarantee all besiktasPinData defaults exist
+  const merged = [...stored];
+  besiktasPinData.forEach((bp) => {
+    if (!merged.some((p) => p.id === bp.id)) {
+      merged.push(bp);
+    }
+  });
+
+  const result = merged.map(normalizePinData);
+  console.log(`[harita] loadAllPins: ${stored.length} from localStorage + defaults → ${result.length} total`);
+  result.forEach((p, i) => console.log(`  ${i + 1}. [${p.id}] "${p.title}" coords=[${p.coordinates}]`));
+  return result;
+}
 
 export default function HaritaPage() {
   const [selectedCategory,    setSelectedCategory]    = useState("all");
@@ -22,36 +57,27 @@ export default function HaritaPage() {
   const [sidebarOpen,         setSidebarOpen]         = useState(true);
   const [pins,                setPins]                = useState<PinLocation[]>([]);
 
+  const reloadPins = useCallback(() => {
+    setPins(loadAllPins());
+  }, []);
+
   useEffect(() => {
-    let isMounted = true;
-    const loadPins = async () => {
-      try {
-        console.log("[harita] loadPins starting...");
-        const data = await fetchPinsFromDb();
-        console.log("[harita] loadPins received", data.length, "pins. IDs:", data.map(p => p.id).join(", "));
-        if (isMounted) {
-          setPins(data);
-        }
-      } catch (e) {
-        console.error("Error loading pins:", e);
-      }
-    };
+    // Initial load — synchronous, no waiting
+    reloadPins();
 
-    loadPins();
-
+    // Re-load when admin panel updates data (same tab or other tab)
     const handleUpdate = () => {
-      console.log("[harita] Data update event received, reloading pins...");
-      loadPins();
+      console.log("[harita] Data update event received, reloading...");
+      reloadPins();
     };
     window.addEventListener("besiktas_data_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 
     return () => {
-      isMounted = false;
       window.removeEventListener("besiktas_data_updated", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
-  }, []);
+  }, [reloadPins]);
 
   const filteredPins = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
