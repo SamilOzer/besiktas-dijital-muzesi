@@ -40,12 +40,15 @@ const getLocalMekanlar = (): PinLocation[] => {
   try {
     const data = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!data) {
+      console.log('[db-service] localStorage empty, seeding with', besiktasPinData.length, 'defaults');
       const normalizedDefaults = besiktasPinData.map(normalizePinData);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedDefaults));
       return normalizedDefaults;
     }
     const parsed = JSON.parse(data);
-    return (Array.isArray(parsed) ? parsed : besiktasPinData).map(normalizePinData);
+    const result = (Array.isArray(parsed) ? parsed : besiktasPinData).map(normalizePinData);
+    console.log('[db-service] getLocalMekanlar: loaded', result.length, 'pins from localStorage');
+    return result;
   } catch (error) {
     console.error('Failed to parse local storage', error);
     return besiktasPinData.map(normalizePinData);
@@ -110,6 +113,7 @@ const saveLocalOlaylar = (items: HistoricalEvent[]) => {
  */
 export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
   const localList = getLocalMekanlar();
+  console.log('[db-service] fetchPinsFromDb: localList has', localList.length, 'pins. Supabase configured:', isSupabaseConfigured);
 
   if (isSupabaseConfigured && supabase) {
     try {
@@ -118,7 +122,12 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
         .select('*')
         .order('title', { ascending: true });
 
+      if (error) {
+        console.warn('[db-service] Supabase query error:', error.message);
+      }
+
       if (!error && data && data.length > 0) {
+        console.log('[db-service] Supabase returned', data.length, 'pins');
         const dbPins = data.map((item: any) => ({
           ...item,
           coordinates: Array.isArray(item.coordinates) 
@@ -129,19 +138,25 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
         
         // Merge dbPins and localList without duplicating IDs
         const mergedList = [...dbPins];
+        let localOnlyCount = 0;
         localList.forEach((lp) => {
           if (!mergedList.some((dp) => dp.id === lp.id)) {
             mergedList.push(lp);
+            localOnlyCount++;
           }
         });
+        console.log('[db-service] Merged list:', mergedList.length, 'pins (', localOnlyCount, 'local-only)');
 
         saveLocalMekanlar(mergedList);
         return mergedList.map(normalizePinData);
+      } else {
+        console.log('[db-service] Supabase returned 0 pins, using localStorage');
       }
     } catch (e) {
-      console.warn('Network error, falling back to local storage:', e);
+      console.warn('[db-service] Network error, falling back to local storage:', e);
     }
   }
+  console.log('[db-service] Returning', localList.length, 'pins from localStorage');
   return localList.map(normalizePinData);
 };
 

@@ -25,7 +25,9 @@ export default function HaritaPage() {
     let isMounted = true;
     const loadPins = async () => {
       try {
+        console.log("[harita] loadPins starting...");
         const data = await fetchPinsFromDb();
+        console.log("[harita] loadPins received", data.length, "pins. IDs:", data.map(p => p.id).join(", "));
         if (isMounted) {
           setPins(data);
         }
@@ -36,7 +38,10 @@ export default function HaritaPage() {
 
     loadPins();
 
-    const handleUpdate = () => loadPins();
+    const handleUpdate = () => {
+      console.log("[harita] Data update event received, reloading pins...");
+      loadPins();
+    };
     window.addEventListener("besiktas_data_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 
@@ -48,12 +53,16 @@ export default function HaritaPage() {
   }, []);
 
   const filteredPins = useMemo(() => {
-    return pins.filter((pin) => {
+    const result = pins.filter((pin) => {
       const catOk   = selectedCategory    === "all" || pin.category    === selectedCategory;
       const timeOk  = selectedTimePeriod  === "all" || pin.timePeriod  === selectedTimePeriod;
       const neighOk = selectedNeighborhood=== "all" || pin.neighborhood=== selectedNeighborhood;
       return catOk && timeOk && neighOk;
     });
+    if (result.length !== pins.length) {
+      console.log(`[harita] Filtered: ${pins.length} → ${result.length} pins (cat=${selectedCategory}, time=${selectedTimePeriod}, neigh=${selectedNeighborhood})`);
+    }
+    return result;
   }, [selectedCategory, selectedTimePeriod, selectedNeighborhood, pins]);
 
   const handleReset = () => {

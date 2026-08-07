@@ -97,11 +97,31 @@ export const updateCategoryStats = () => {
 // Initialize category stats
 updateCategoryStats();
 
+// ─── Direct localStorage helpers (synchronous, guaranteed) ────────────────────
+const MEKANLAR_KEY = "besiktas_mekanlar_db";
+
+const directSaveToLocalStorage = (items: PinLocation[]) => {
+  if (typeof window === "undefined") return;
+  const normalized = items.map(normalizePinData);
+  try {
+    localStorage.setItem(MEKANLAR_KEY, JSON.stringify(normalized));
+    console.log(`[admin-store] ✅ Saved ${normalized.length} mekanlar to localStorage`);
+  } catch (err) {
+    console.warn("[admin-store] localStorage quota warning, compressing:", err);
+    const slimmed = normalized.map(p => ({ ...p, images: p.images?.slice(0, 1) || [] }));
+    try {
+      localStorage.setItem(MEKANLAR_KEY, JSON.stringify(slimmed));
+    } catch (e2) {
+      console.error("[admin-store] Failed to save even after compression", e2);
+    }
+  }
+};
+
 // ─── Mekan CRUD ───────────────────────────────────────────────────────────────
 export const getMekanlar = (): PinLocation[] => {
   if (typeof window !== "undefined") {
     try {
-      const data = localStorage.getItem("besiktas_mekanlar_db");
+      const data = localStorage.getItem(MEKANLAR_KEY);
       if (data) {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -129,12 +149,28 @@ export const fetchMekanlar = async (): Promise<PinLocation[]> => {
 
 export const addMekan = (item: PinLocation) => {
   const normalized = normalizePinData(item);
+  console.log("[admin-store] addMekan called:", normalized.id, normalized.title, normalized.category, normalized.coordinates);
+  
+  // 1. Read current list from localStorage
   const current = getMekanlar();
+  
+  // 2. Build updated list with new item
   const updated = [...current.filter(m => m.id !== normalized.id), normalized];
+  
+  // 3. Update in-memory store
   mekanlar = updated;
   updateCategoryStats();
-  savePinToDb(normalized).catch((err: any) => console.error("Error saving pin to database:", err));
+  
+  // 4. CRITICAL: Save ENTIRE updated list to localStorage SYNCHRONOUSLY
+  directSaveToLocalStorage(updated);
+  
+  // 5. Async Supabase sync (fire-and-forget, localStorage is already safe)
+  savePinToDb(normalized).catch((err: any) => console.error("Error saving pin to Supabase:", err));
+  
+  // 6. Notify other components/tabs
   notifyDataUpdated();
+  
+  console.log("[admin-store] addMekan complete. Total mekanlar:", updated.length);
   return normalized;
 };
 
@@ -143,9 +179,13 @@ export const updateMekan = (id: string, updates: Partial<PinLocation>) => {
   const updatedList = current.map((m) => (m.id === id ? normalizePinData({ ...m, ...updates }) : m));
   mekanlar = updatedList;
   updateCategoryStats();
+  
+  // CRITICAL: Save ENTIRE updated list to localStorage SYNCHRONOUSLY
+  directSaveToLocalStorage(updatedList);
+  
   const updatedItem = mekanlar.find((m) => m.id === id) ?? null;
   if (updatedItem) {
-    savePinToDb(updatedItem).catch((err: any) => console.error("Error updating pin in database:", err));
+    savePinToDb(updatedItem).catch((err: any) => console.error("Error updating pin in Supabase:", err));
   }
   notifyDataUpdated();
   return updatedItem;
@@ -153,9 +193,14 @@ export const updateMekan = (id: string, updates: Partial<PinLocation>) => {
 
 export const deleteMekan = (id: string) => {
   const current = getMekanlar();
-  mekanlar = current.filter((m) => m.id !== id);
+  const filtered = current.filter((m) => m.id !== id);
+  mekanlar = filtered;
   updateCategoryStats();
-  deletePinFromDb(id).catch((err: any) => console.error("Error deleting pin from database:", err));
+  
+  // CRITICAL: Save ENTIRE updated list to localStorage SYNCHRONOUSLY
+  directSaveToLocalStorage(filtered);
+  
+  deletePinFromDb(id).catch((err: any) => console.error("Error deleting pin from Supabase:", err));
   notifyDataUpdated();
 };
 
