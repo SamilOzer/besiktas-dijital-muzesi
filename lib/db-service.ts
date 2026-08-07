@@ -63,8 +63,18 @@ const getLocalMekanlar = (): PinLocation[] => {
       return normalizedDefaults;
     }
     const parsed = JSON.parse(data);
-    const result = (Array.isArray(parsed) ? parsed : besiktasPinData).map(normalizePinData);
-    console.log('[db-service] getLocalMekanlar: loaded', result.length, 'pins from localStorage');
+    const list = Array.isArray(parsed) ? parsed : [];
+    
+    // Always guarantee besiktasPinData default landmarks are present
+    const combined = [...list];
+    besiktasPinData.forEach((bp) => {
+      if (!combined.some((item) => item.id === bp.id)) {
+        combined.push(bp);
+      }
+    });
+
+    const result = combined.map(normalizePinData);
+    console.log('[db-service] getLocalMekanlar: loaded', result.length, 'pins');
     return result;
   } catch (error) {
     console.error('Failed to parse local storage', error);
@@ -154,16 +164,24 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
           images: Array.isArray(item.images) ? item.images : []
         })) as PinLocation[];
         
-        // Merge dbPins and localList without duplicating IDs
+        // Merge dbPins, localList, and besiktasPinData without duplicating IDs
         const mergedList = [...dbPins];
         let localOnlyCount = 0;
+
         localList.forEach((lp) => {
           if (!mergedList.some((dp) => dp.id === lp.id)) {
             mergedList.push(lp);
             localOnlyCount++;
           }
         });
-        console.log('[db-service] Merged list:', mergedList.length, 'pins (', localOnlyCount, 'local-only)');
+
+        besiktasPinData.forEach((bp) => {
+          if (!mergedList.some((mp) => mp.id === bp.id)) {
+            mergedList.push(bp);
+          }
+        });
+
+        console.log('[db-service] Merged list total:', mergedList.length, 'pins (', localOnlyCount, 'local-only)');
 
         saveLocalMekanlar(mergedList);
         return mergedList.map(normalizePinData);
