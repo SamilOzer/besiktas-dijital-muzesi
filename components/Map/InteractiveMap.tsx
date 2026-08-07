@@ -268,6 +268,10 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
     
     leafletMapRef.current.addLayer(markersContainer);
     clusterGroupRef.current = markersContainer;
+
+    if (pins.length === 1 && pins[0].coordinates) {
+      leafletMapRef.current.flyTo(pins[0].coordinates, 16, { duration: 1 });
+    }
   }, [pins, mapReady, zoomLevel]); // re-runs when pins filter changes OR map becomes ready
 
   const handleRecenter = () => {

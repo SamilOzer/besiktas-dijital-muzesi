@@ -286,4 +286,21 @@ export const besiktasPinData: PinLocation[] = [
     ],
     era: "20. Yüzyıl (Cumhuriyet Dönemi)",
   },
+  {
+    id: "besiktas-belediye-binasi",
+    title: "Beşiktaş Belediye Binası",
+    category: "dini-kamusal",
+    categoryLabel: "Dini & Kamusal Yapılar",
+    coordinates: [41.0485, 29.0042],
+    address: "Aytar Cd. No:2, 34340 Beşiktaş/İstanbul",
+    timePeriod: "1900-1960",
+    neighborhood: "Nisbetiye",
+    summary: "Beşiktaş Belediyesi Hizmet Binası ve Kamusal Yönetim Merkezi.",
+    fullHistory:
+      "Beşiktaş Belediyesi hizmet binası, Nisbetiye/Abbasağa bölgesinde kent sakinlerine yerel yönetim hizmetleri sunan ana idari merkezdir.",
+    images: [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Besiktas_Belediyesi_Logo.svg/1200px-Besiktas_Belediyesi_Logo.svg.png",
+    ],
+    era: "20. Yüzyıl (Cumhuriyet Dönemi)",
+  },
 ];

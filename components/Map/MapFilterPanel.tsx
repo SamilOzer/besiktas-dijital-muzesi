@@ -1,6 +1,5 @@
-"use client";
 import { useState } from "react";
-import { ChevronDown, ChevronUp, RotateCcw, Layers, Clock, MapPin } from "lucide-react";
+import { ChevronDown, ChevronUp, RotateCcw, Layers, Clock, MapPin, Search } from "lucide-react";
 import { TIME_PERIODS, NEIGHBORHOODS } from "@/data/besiktasPinData";
 
 const CATEGORIES = [
@@ -24,10 +23,13 @@ interface MapFilterPanelProps {
   selectedCategory: string;
   selectedTimePeriod: string;
   selectedNeighborhood: string;
+  searchQuery: string;
   resultCount: number;
+  totalCount: number;
   onCategoryChange: (v: string) => void;
   onTimePeriodChange: (v: string) => void;
   onNeighborhoodChange: (v: string) => void;
+  onSearchChange: (v: string) => void;
   onReset: () => void;
 }
 
@@ -65,42 +67,60 @@ export default function MapFilterPanel({
   selectedCategory,
   selectedTimePeriod,
   selectedNeighborhood,
+  searchQuery,
   resultCount,
+  totalCount,
   onCategoryChange,
   onTimePeriodChange,
   onNeighborhoodChange,
+  onSearchChange,
   onReset,
 }: MapFilterPanelProps) {
   const hasActiveFilter =
     selectedCategory !== "all" ||
     selectedTimePeriod !== "all" ||
-    selectedNeighborhood !== "all";
+    selectedNeighborhood !== "all" ||
+    searchQuery.trim() !== "";
 
   return (
     <div className="flex flex-col h-full">
       {/* ─── Panel header ─── */}
-      <div className="px-4 py-4 border-b border-white/10 flex-shrink-0">
-        <h1 className="text-base font-bold text-white leading-tight">
-          Beşiktaş Kültür Haritası
-        </h1>
-        <p className="text-[11px] text-[var(--muted)] mt-0.5">
-          Tarihi mekânları keşfedin
-        </p>
+      <div className="px-4 py-4 border-b border-white/10 flex-shrink-0 space-y-3">
+        <div>
+          <h1 className="text-base font-bold text-white leading-tight">
+            Beşiktaş Kültür Haritası
+          </h1>
+          <p className="text-[11px] text-[var(--muted)] mt-0.5">
+            Tarihi mekânları ve pinleri keşfedin
+          </p>
+        </div>
+
+        {/* Search Input */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-2.5 text-[var(--muted)]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Mekân veya adres ara..."
+            className="w-full pl-9 pr-3 py-1.5 bg-[#12141a] border border-white/15 rounded-lg text-xs text-white placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-all"
+            id="map-search-input"
+          />
+        </div>
 
         {/* Result count + reset */}
-        <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center justify-between">
           <span className="text-[11px] text-[var(--muted)]">
-            <span className="text-[var(--accent)] font-bold text-sm">{resultCount}</span>
-            {" "}mekân
+            Gösterilen: <span className="text-[var(--accent)] font-bold text-sm">{resultCount}</span> / {totalCount} mekân
           </span>
           {hasActiveFilter && (
             <button
               onClick={onReset}
-              className="flex items-center gap-1 text-[11px] text-[var(--muted)] hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-white/6"
+              className="flex items-center gap-1 text-[11px] text-[var(--accent)] hover:text-white transition-colors px-2 py-1 rounded-lg bg-[var(--accent)]/15 border border-[var(--accent)]/30 font-semibold"
               id="filter-reset"
             >
               <RotateCcw size={11} />
-              Sıfırla
+              Filtreleri Sıfırla
             </button>
           )}
         </div>

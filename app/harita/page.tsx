@@ -17,6 +17,7 @@ export default function HaritaPage() {
   const [selectedCategory,    setSelectedCategory]    = useState("all");
   const [selectedTimePeriod,  setSelectedTimePeriod]  = useState("all");
   const [selectedNeighborhood,setSelectedNeighborhood]= useState("all");
+  const [searchQuery,         setSearchQuery]         = useState("");
   const [activePin,           setActivePin]           = useState<PinLocation | null>(null);
   const [sidebarOpen,         setSidebarOpen]         = useState(true);
   const [pins,                setPins]                = useState<PinLocation[]>([]);
@@ -53,22 +54,30 @@ export default function HaritaPage() {
   }, []);
 
   const filteredPins = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     const result = pins.filter((pin) => {
       const catOk   = selectedCategory    === "all" || pin.category    === selectedCategory;
       const timeOk  = selectedTimePeriod  === "all" || pin.timePeriod  === selectedTimePeriod;
       const neighOk = selectedNeighborhood=== "all" || pin.neighborhood=== selectedNeighborhood;
-      return catOk && timeOk && neighOk;
+      const searchOk =
+        !q ||
+        pin.title.toLowerCase().includes(q) ||
+        (pin.address || "").toLowerCase().includes(q) ||
+        (pin.summary || "").toLowerCase().includes(q);
+
+      return catOk && timeOk && neighOk && searchOk;
     });
     if (result.length !== pins.length) {
-      console.log(`[harita] Filtered: ${pins.length} → ${result.length} pins (cat=${selectedCategory}, time=${selectedTimePeriod}, neigh=${selectedNeighborhood})`);
+      console.log(`[harita] Filtered: ${pins.length} → ${result.length} pins (cat=${selectedCategory}, time=${selectedTimePeriod}, neigh=${selectedNeighborhood}, q=${q})`);
     }
     return result;
-  }, [selectedCategory, selectedTimePeriod, selectedNeighborhood, pins]);
+  }, [selectedCategory, selectedTimePeriod, selectedNeighborhood, searchQuery, pins]);
 
   const handleReset = () => {
     setSelectedCategory("all");
     setSelectedTimePeriod("all");
     setSelectedNeighborhood("all");
+    setSearchQuery("");
   };
 
   return (
@@ -89,10 +98,13 @@ export default function HaritaPage() {
             selectedCategory={selectedCategory}
             selectedTimePeriod={selectedTimePeriod}
             selectedNeighborhood={selectedNeighborhood}
+            searchQuery={searchQuery}
             resultCount={filteredPins.length}
+            totalCount={pins.length}
             onCategoryChange={setSelectedCategory}
             onTimePeriodChange={setSelectedTimePeriod}
             onNeighborhoodChange={setSelectedNeighborhood}
+            onSearchChange={setSearchQuery}
             onReset={handleReset}
           />
         )}
