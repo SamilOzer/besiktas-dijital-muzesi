@@ -253,6 +253,8 @@ export default function AnsiklopediPage() {
         <DialogContent className="max-w-4xl lg:max-w-5xl p-0 overflow-hidden" style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
           <DialogHeader>
             <DialogTitle>{editingId ? 'Olay Düzenle' : 'Yeni Olay Ekle'}</DialogTitle>
+            <p className="text-xs text-[var(--a-muted)]">Ansiklopedi maddesine ait tarihi bilgileri, kategorileri ve görselleri güncelleyin.</p>
+          </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="flex flex-col flex-1 overflow-hidden min-h-0">
             {/* Validation Error Banner */}
             {Object.keys(errors).length > 0 && (
