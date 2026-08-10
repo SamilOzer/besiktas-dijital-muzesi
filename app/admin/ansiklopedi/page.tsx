@@ -32,7 +32,7 @@ const olaySchema = z.object({
   summary: z.string().trim().min(1, 'Özet bilgi girilmesi zorunludur'),
   description: z.string().optional(),
   location: z.string().optional(),
-  tags: z.string().optional().default(''), // comma-separated, convert to array on submit
+  tags: z.string().default(''), // comma-separated, convert to array on submit
   images: z.array(z.string()).optional(),
 });
 type OlayFormData = z.infer<typeof olaySchema>;
