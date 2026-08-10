@@ -22,18 +22,29 @@ import { HistoricalEvent, EventCategory } from '@/data/ansiklopediData';
 import ImageUploadInput from '@/components/ImageUploadInput';
 
 const olaySchema = z.object({
-  title: z.string().min(2, 'En az 2 karakter'),
-  date: z.string().min(4, 'Tarih gerekli'),
-  era: z.string().min(2, 'Dönem gerekli'),
-  category: z.enum(['siyasi','askeri','kulturel','toplumsal','spor','mimari']),
-  categoryLabel: z.string().min(2, 'Kategori etiketi gerekli'),
-  summary: z.string().min(10, 'Özet gerekli'),
+  title: z.string().trim().min(2, 'Başlık en az 2 karakter olmalıdır'),
+  date: z.string().trim().min(1, 'Tarih bilgisi girilmesi zorunludur'),
+  era: z.string().trim().min(1, 'Dönem bilgisi girilmesi zorunludur'),
+  category: z.enum(['siyasi','askeri','kulturel','toplumsal','spor','mimari'], {
+    errorMap: () => ({ message: 'Geçerli bir kategori seçiniz' })
+  }),
+  categoryLabel: z.string().optional(),
+  summary: z.string().trim().min(1, 'Özet bilgi girilmesi zorunludur'),
   description: z.string().optional(),
   location: z.string().optional(),
-  tags: z.string(), // comma-separated, convert to array on submit
+  tags: z.string().optional().default(''), // comma-separated, convert to array on submit
   images: z.array(z.string()).optional(),
 });
 type OlayFormData = z.infer<typeof olaySchema>;
+
+const CATEGORY_LABELS: Record<string, string> = {
+  siyasi: 'Siyasi',
+  askeri: 'Askeri',
+  kulturel: 'Kültürel',
+  toplumsal: 'Toplumsal',
+  spor: 'Spor',
+  mimari: 'Mimari',
+};
 
 export default function AnsiklopediPage() {
   const [olaylar, setOlaylar] = useState<HistoricalEvent[]>([]);
@@ -61,7 +72,7 @@ export default function AnsiklopediPage() {
       date: '',
       era: '',
       category: 'siyasi',
-      categoryLabel: '',
+      categoryLabel: 'Siyasi',
       summary: '',
       description: '',
       location: '',
@@ -75,7 +86,7 @@ export default function AnsiklopediPage() {
   const openAddDialog = () => {
     setEditingId(null);
     reset({
-      title: '', date: '', era: '', category: 'siyasi', categoryLabel: '', summary: '', description: '', location: '', tags: '', images: []
+      title: '', date: '', era: '', category: 'siyasi', categoryLabel: 'Siyasi', summary: '', description: '', location: '', tags: '', images: []
     });
     setDialogOpen(true);
   };
@@ -90,24 +101,26 @@ export default function AnsiklopediPage() {
       date: row.date,
       era: row.era,
       category: row.category,
-      categoryLabel: row.categoryLabel,
+      categoryLabel: row.categoryLabel || CATEGORY_LABELS[row.category] || 'Toplumsal',
       summary: row.summary,
       description: (row as any).description || '',
       location: row.location || '',
-      tags: row.tags.join(', '),
+      tags: (row.tags || []).join(', '),
       images: existingImages,
     });
     setDialogOpen(true);
   };
 
   const onSubmit = (data: OlayFormData) => {
-    const tagsArray = data.tags.split(',').map(t => t.trim()).filter(Boolean);
+    const tagsArray = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
     const validImages = data.images?.filter(img => img.trim() !== '') || [];
     const primaryImage = validImages[0] || '';
+    const catLabel = CATEGORY_LABELS[data.category] || 'Toplumsal';
 
     if (editingId) {
       updateOlay(editingId, {
         ...data,
+        categoryLabel: catLabel,
         tags: tagsArray,
         image: primaryImage,
         images: validImages,
@@ -118,6 +131,7 @@ export default function AnsiklopediPage() {
       addOlay({
         id: Date.now().toString(),
         ...data,
+        categoryLabel: catLabel,
         tags: tagsArray,
         image: primaryImage,
         images: validImages,
@@ -127,6 +141,14 @@ export default function AnsiklopediPage() {
     }
     setOlaylar(getOlaylar());
     setDialogOpen(false);
+  };
+
+  const onInvalid = (formErrors: typeof errors) => {
+    console.warn('[admin/ansiklopedi] Form validation errors:', formErrors);
+    const errorMessages = Object.entries(formErrors)
+      .map(([field, err]) => `• ${err?.message || field}`)
+      .join('\n');
+    alert(`Lütfen formdaki eksik veya hatalı alanları kontrol edin:\n\n${errorMessages}`);
   };
 
   const handleDelete = (id: string) => {
@@ -231,9 +253,21 @@ export default function AnsiklopediPage() {
         <DialogContent className="max-w-4xl lg:max-w-5xl p-0 overflow-hidden" style={{ backgroundColor: 'var(--a-surface)', borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
           <DialogHeader>
             <DialogTitle>{editingId ? 'Olay Düzenle' : 'Yeni Olay Ekle'}</DialogTitle>
-            <p className="text-xs text-[var(--a-muted)]">Ansiklopedi maddesine ait tarihi bilgileri, kategorileri ve görselleri güncelleyin.</p>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            {/* Validation Error Banner */}
+            {Object.keys(errors).length > 0 && (
+              <div className="mx-6 mt-4 p-3 bg-red-500/15 border border-red-500/40 rounded-xl text-red-400 text-xs flex flex-col gap-1 shadow-inner">
+                <div className="font-bold flex items-center gap-1.5 text-red-300">
+                  <span>⚠️</span> Lütfen aşağıdaki eksik veya hatalı alanları düzeltiniz:
+                </div>
+                <ul className="list-disc list-inside space-y-0.5 opacity-90 pl-1">
+                  {Object.entries(errors).map(([field, err]) => (
+                    <li key={field}>{err?.message || `${field} alanı hatalı`}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Scrollable Form Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

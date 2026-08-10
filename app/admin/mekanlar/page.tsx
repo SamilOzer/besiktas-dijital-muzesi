@@ -25,16 +25,26 @@ import dynamic from 'next/dynamic';
 const LocationPickerModal = dynamic(() => import('@/components/admin/LocationPickerModal'), { ssr: false });
 
 const mekanSchema = z.object({
-  title: z.string().min(2, 'En az 2 karakter'),
-  category: z.enum(['heykeller','saraylar','tarihi-yapilar','spor','dini-kamusal']),
-  timePeriod: z.enum(['1400-1600','1600-1800','1800-1850','1850-1900','1900-1960']),
-  neighborhood: z.enum(['Abbasağa','Akatlar','Arnavutköy','Balmumcu','Bebek','Cihannüma','Dikilitaş','Etiler','Gayrettepe','Konaklar','Kuruçeşme','Kültür','Levazım','Levent','Mecidiye','Muradiye','Nisbetiye','Ortaköy','Sinanpaşa','Türkali','Ulus','Vişnezade','Yıldız']),
-  address: z.string().min(5, 'Adres gerekli'),
-  summary: z.string().min(10, 'Özet gerekli'),
+  title: z.string().trim().min(2, 'Mekân adı en az 2 karakter olmalıdır'),
+  category: z.enum(['heykeller','saraylar','tarihi-yapilar','spor','dini-kamusal'], {
+    errorMap: () => ({ message: 'Geçerli bir kategori seçiniz' })
+  }),
+  timePeriod: z.enum(['1400-1600','1600-1800','1800-1850','1850-1900','1900-1960'], {
+    errorMap: () => ({ message: 'Geçerli bir dönem seçiniz' })
+  }),
+  neighborhood: z.enum(['Abbasağa','Akatlar','Arnavutköy','Balmumcu','Bebek','Cihannüma','Dikilitaş','Etiler','Gayrettepe','Konaklar','Kuruçeşme','Kültür','Levazım','Levent','Mecidiye','Muradiye','Nisbetiye','Ortaköy','Sinanpaşa','Türkali','Ulus','Vişnezade','Yıldız'], {
+    errorMap: () => ({ message: 'Geçerli bir mahalle seçiniz' })
+  }),
+  address: z.string().trim().min(1, 'Açık adres girilmesi zorunludur'),
+  summary: z.string().trim().min(1, 'Özet bilgi girilmesi zorunludur'),
   description: z.string().optional(),
   era: z.string().optional(),
-  lat: z.coerce.number().min(40).max(42),
-  lng: z.coerce.number().min(28).max(30),
+  lat: z.coerce.number({ invalid_type_error: 'Geçerli bir enlem (lat) koordinatı giriniz' })
+    .min(36, 'Enlem Türkiye sınırları (36-42) arasında olmalıdır')
+    .max(43, 'Enlem Türkiye sınırları (36-42) arasında olmalıdır'),
+  lng: z.coerce.number({ invalid_type_error: 'Geçerli bir boylam (lng) koordinatı giriniz' })
+    .min(25, 'Boylam Türkiye sınırları (25-45) arasında olmalıdır')
+    .max(45, 'Boylam Türkiye sınırları (25-45) arasında olmalıdır'),
   images: z.array(z.string()).optional(),
 });
 type MekanFormData = z.infer<typeof mekanSchema>;
@@ -191,6 +201,14 @@ export default function MekanlarPage() {
     setDialogOpen(false);
   };
 
+  const onInvalid = (formErrors: typeof errors) => {
+    console.warn('[admin/mekanlar] Form validation errors:', formErrors);
+    const errorMessages = Object.entries(formErrors)
+      .map(([field, err]) => `• ${err?.message || field}`)
+      .join('\n');
+    alert(`Lütfen formdaki eksik veya hatalı alanları kontrol edin:\n\n${errorMessages}`);
+  };
+
   const handleDelete = (id: string) => {
     deleteMekan(id);
     setMekanlar(getMekanlar());
@@ -289,9 +307,21 @@ export default function MekanlarPage() {
         >
           <DialogHeader>
             <DialogTitle>{editingId ? 'Mekân Düzenle' : 'Yeni Mekân Ekle'}</DialogTitle>
-            <p className="text-xs text-[var(--a-muted)]">Harita pinine ait temel bilgileri, konum koordinatlarını ve görselleri güncelleyin.</p>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            {/* Validation Error Banner */}
+            {Object.keys(errors).length > 0 && (
+              <div className="mx-6 mt-4 p-3 bg-red-500/15 border border-red-500/40 rounded-xl text-red-400 text-xs flex flex-col gap-1 shadow-inner">
+                <div className="font-bold flex items-center gap-1.5 text-red-300">
+                  <span>⚠️</span> Lütfen aşağıdaki eksik veya hatalı alanları düzeltiniz:
+                </div>
+                <ul className="list-disc list-inside space-y-0.5 opacity-90 pl-1">
+                  {Object.entries(errors).map(([field, err]) => (
+                    <li key={field}>{err?.message || `${field} alanı hatalı`}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Scrollable Form Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
