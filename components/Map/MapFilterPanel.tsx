@@ -3,12 +3,12 @@ import { ChevronDown, ChevronUp, RotateCcw, Layers, Clock, MapPin, Search } from
 import { TIME_PERIODS, NEIGHBORHOODS } from "@/data/besiktasPinData";
 
 const CATEGORIES = [
-  { id: "all",           label: "Tümü",             emoji: "🗺️" },
-  { id: "heykeller",     label: "Heykeller",         emoji: "🗿" },
-  { id: "saraylar",      label: "Saraylar",          emoji: "🏰" },
-  { id: "tarihi-yapilar",label: "Tarihi Yapılar",    emoji: "🏛️" },
-  { id: "spor",          label: "Stadyum & Spor",    emoji: "🏟️" },
-  { id: "dini-kamusal",  label: "Dini & Kamusal",    emoji: "⛪" },
+  { id: "all",           label: "Tümü",                    emoji: "🗺️" },
+  { id: "heykeller",     label: "Heykeller & Anıtlar",     emoji: "🗿" },
+  { id: "saraylar",      label: "Saraylar & Kasırlar",     emoji: "🏰" },
+  { id: "tarihi-yapilar",label: "Tarihi Evler & Yapılar",  emoji: "🏛️" },
+  { id: "spor",          label: "Stadyum & Spor Tarihi",   emoji: "🏟️" },
+  { id: "dini-kamusal",  label: "Dini & Kamusal Yapılar",  emoji: "⛪" },
 ];
 
 const TIME_PERIOD_COLORS: Record<string, string> = {

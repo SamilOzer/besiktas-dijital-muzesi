@@ -54,8 +54,15 @@ export default function HaritaPage() {
   const [selectedNeighborhood,setSelectedNeighborhood]= useState("all");
   const [searchQuery,         setSearchQuery]         = useState("");
   const [activePin,           setActivePin]           = useState<PinLocation | null>(null);
-  const [sidebarOpen,         setSidebarOpen]         = useState(true);
+  const [sidebarOpen,         setSidebarOpen]         = useState(false); // default closed, opened after mount if desktop
   const [pins,                setPins]                = useState<PinLocation[]>([]);
+
+  // Open sidebar by default on desktop only (after hydration)
+  useEffect(() => {
+    if (window.innerWidth >= 768) {
+      setSidebarOpen(true);
+    }
+  }, []);
 
   const reloadPins = useCallback(() => {
     setPins(loadAllPins());
@@ -114,8 +121,10 @@ export default function HaritaPage() {
     >
       {/* ── Sidebar ─────────────────────────────────── */}
       <aside
-        className="flex-shrink-0 h-full flex flex-col border-r border-white/10 bg-[#14161d]/95 backdrop-blur-md transition-all duration-300 overflow-hidden"
-        style={{ width: sidebarOpen ? "280px" : "0px" }}
+        className={`h-full flex flex-col border-r border-white/10 bg-[#14161d]/98 backdrop-blur-md transition-all duration-300 overflow-hidden
+          ${sidebarOpen ? "w-[280px]" : "w-0"}
+          absolute md:relative z-20 md:z-auto`
+        }
         aria-label="Filtreler"
       >
         {/* Only render contents when open to avoid layout artifacts */}
@@ -136,10 +145,18 @@ export default function HaritaPage() {
         )}
       </aside>
 
+      {/* ── Mobile backdrop when sidebar open ────────── */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/40 z-10"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ── Toggle sidebar button ────────────────────── */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute left-0 bottom-6 z-30 flex items-center justify-center w-8 h-8 rounded-r-xl bg-[#14161d] border border-l-0 border-white/15 text-[var(--muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]/40 transition-all shadow-lg"
+        className="absolute bottom-6 z-30 flex items-center justify-center w-8 h-8 rounded-r-xl bg-[#14161d] border border-l-0 border-white/15 text-[var(--muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]/40 transition-all shadow-lg"
         style={{ left: sidebarOpen ? "280px" : "0px" }}
         id="sidebar-toggle"
         aria-label={sidebarOpen ? "Paneli kapat" : "Paneli aç"}

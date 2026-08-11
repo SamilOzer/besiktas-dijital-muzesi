@@ -29,13 +29,13 @@ const olaySchema = z.object({
     errorMap: () => ({ message: 'Geçerli bir kategori seçiniz' })
   }),
   categoryLabel: z.string().optional(),
-  summary: z.string().trim().min(1, 'Özet bilgi girilmesi zorunludur'),
+  summary: z.string().optional().default(''),
   description: z.string().optional(),
   location: z.string().optional(),
   tags: z.string().default(''), // comma-separated, convert to array on submit
   images: z.array(z.string()).optional(),
 });
-type OlayFormData = z.infer<typeof olaySchema>;
+type OlayFormData = z.input<typeof olaySchema>;
 
 const CATEGORY_LABELS: Record<string, string> = {
   siyasi: 'Siyasi',
@@ -117,6 +117,8 @@ export default function AnsiklopediPage() {
     const primaryImage = validImages[0] || '';
     const catLabel = CATEGORY_LABELS[data.category] || 'Toplumsal';
 
+    const descriptionText = data.description || data.summary || '';
+
     if (editingId) {
       updateOlay(editingId, {
         ...data,
@@ -124,7 +126,8 @@ export default function AnsiklopediPage() {
         tags: tagsArray,
         image: primaryImage,
         images: validImages,
-        fullText: data.summary,
+        fullText: descriptionText,
+        summary: descriptionText.slice(0, 200),
         description: data.description,
       });
     } else {
@@ -135,7 +138,8 @@ export default function AnsiklopediPage() {
         tags: tagsArray,
         image: primaryImage,
         images: validImages,
-        fullText: data.summary,
+        fullText: descriptionText,
+        summary: descriptionText.slice(0, 200),
         description: data.description,
       });
     }
@@ -422,14 +426,8 @@ export default function AnsiklopediPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="summary">Özet Bilgi</Label>
-                    <Textarea id="summary" rows={3} placeholder="Olay hakkında özet metin..." {...register('summary')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-                    {errors.summary && <p className="text-xs text-red-600">{errors.summary.message}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Detaylı Açıklama (Opsiyonel)</Label>
-                    <Textarea id="description" rows={4} placeholder="Olayın detaylı hikayesi ve tarihsel önemi..." {...register('description')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                    <Label htmlFor="description">Açıklama</Label>
+                    <Textarea id="description" rows={6} placeholder="Olayın detaylı hikayesi ve tarihsel önemi..." {...register('description')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
                   </div>
 
                   <div className="space-y-2">

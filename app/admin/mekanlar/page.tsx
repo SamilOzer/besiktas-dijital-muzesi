@@ -36,7 +36,7 @@ const mekanSchema = z.object({
     errorMap: () => ({ message: 'Geçerli bir mahalle seçiniz' })
   }),
   address: z.string().trim().min(1, 'Açık adres girilmesi zorunludur'),
-  summary: z.string().trim().min(1, 'Özet bilgi girilmesi zorunludur'),
+  summary: z.string().optional().default(''),
   description: z.string().optional(),
   era: z.string().optional(),
   lat: z.coerce.number({ invalid_type_error: 'Geçerli bir enlem (lat) koordinatı giriniz' })
@@ -47,7 +47,7 @@ const mekanSchema = z.object({
     .max(45, 'Boylam Türkiye sınırları (25-45) arasında olmalıdır'),
   images: z.array(z.string()).optional(),
 });
-type MekanFormData = z.infer<typeof mekanSchema>;
+type MekanFormData = z.input<typeof mekanSchema>;
 
 const NEIGHBORHOOD_COORDINATES: Record<string, [number, number]> = {
   Abbasağa: [41.0460, 29.0040],
@@ -164,6 +164,8 @@ export default function MekanlarPage() {
       'dini-kamusal': 'Dini & Kamusal Yapılar'
     };
 
+    const descriptionText = data.description || data.summary || '';
+
     // Ensure pin doesn't overlap exactly with an existing pin
     let targetLat = data.lat;
     let targetLng = data.lng;
@@ -181,7 +183,8 @@ export default function MekanlarPage() {
       updateMekan(editingId, {
         ...data,
         categoryLabel: categoryLabels[data.category],
-        fullHistory: data.summary,
+        fullHistory: descriptionText,
+        summary: descriptionText.slice(0, 200),
         description: data.description,
         coordinates: finalCoordinates,
         images: data.images?.filter(img => img.trim() !== '') || [],
@@ -191,7 +194,8 @@ export default function MekanlarPage() {
         id: Date.now().toString(),
         ...data,
         categoryLabel: categoryLabels[data.category],
-        fullHistory: data.summary,
+        fullHistory: descriptionText,
+        summary: descriptionText.slice(0, 200),
         description: data.description,
         coordinates: finalCoordinates,
         images: data.images?.filter(img => img.trim() !== '') || [],
@@ -519,14 +523,8 @@ export default function MekanlarPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="summary">Özet Bilgi</Label>
-                    <Textarea id="summary" rows={3} placeholder="Mekân hakkında kısa özet..." {...register('summary')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
-                    {errors.summary && <p className="text-xs text-red-600">{errors.summary.message}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Detaylı Tarihçe & Açıklama</Label>
-                    <Textarea id="description" rows={4} placeholder="Detaylı tarihi ve mimari bilgiler..." {...register('description')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
+                    <Label htmlFor="description">Açıklama</Label>
+                    <Textarea id="description" rows={6} placeholder="Detaylı tarihi ve mimari bilgiler..." {...register('description')} style={{ backgroundColor: 'var(--a-bg)', borderColor: 'var(--a-border)' }} />
                   </div>
 
                   <div className="space-y-2">

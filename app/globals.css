@@ -354,14 +354,13 @@ body:has(.harita-page-root) footer {
   left: 50%;
   transform: translate(-50%, -50%) scale(0.97);
   width: min(88vw, 1050px);
-  max-height: 85vh;
+  height: 75vh;
+  max-height: 75vh;
   background: var(--panel);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 20px;
   z-index: 100001;
   overflow: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   animation: modal-appear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
@@ -400,7 +399,8 @@ body:has(.harita-page-root) footer {
     right: 0;
     transform: none;
     width: 100%;
-    max-height: 88vh;
+    height: 85vh;
+    max-height: 85vh;
     border-radius: 20px 20px 0 0;
     animation: slide-up 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   }
@@ -531,11 +531,39 @@ body:has(.harita-page-root) footer {
   border-radius: 50% !important;
 }
 
-/* ─── Admin Panel Dialog Fix ───────────────────── */
 .admin-root [data-radix-portal] {
   z-index: 99999 !important;
 }
 
 .admin-root .fixed.inset-0 {
   z-index: 99998 !important;
+}
+
+/* ─── Leaflet Mobile Fixes ─────────────────────── */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  background: #0d0e12 !important;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-x pan-y;
+}
+
+.leaflet-tile-pane {
+  will-change: transform;
+}
+
+.leaflet-tile {
+  will-change: auto;
+}
+
+/* Prevent grey/black tiles on mobile scroll */
+@media (max-width: 768px) {
+  .leaflet-container {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  .leaflet-control-zoom {
+    display: none !important;
+  }
 }

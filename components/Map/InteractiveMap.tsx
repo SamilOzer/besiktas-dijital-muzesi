@@ -281,22 +281,22 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
   };
 
   return (
-    <div className="relative w-full h-full" style={{ minHeight: "100vh" }}>
+    <div className="relative w-full h-full">
       <div
         ref={mapRef}
         id="besiktas-interactive-map"
         className="w-full h-full absolute inset-0"
       />
 
-      {/* Prominent Top-Right Controls: Harita Görünümü & Merkeze Dön */}
-      <div className="absolute top-4 right-4 z-[1000] flex items-center gap-2">
+      {/* Top-Right Controls: responsive */}
+      <div className="absolute top-3 right-3 z-[1000] flex flex-col sm:flex-row items-end sm:items-center gap-2">
         {/* Tile Layer Switcher */}
-        <div className="bg-[#14161d]/95 backdrop-blur-md border border-white/15 rounded-xl px-3 py-2 flex items-center gap-2 shadow-2xl">
-          <span className="text-xs font-semibold text-[var(--accent)]">Harita Görünümü:</span>
+        <div className="bg-[#14161d]/95 backdrop-blur-md border border-white/15 rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-center gap-2 shadow-2xl">
+          <span className="text-[10px] sm:text-xs font-semibold text-[var(--accent)] hidden sm:inline">Harita Görünümü:</span>
           <select
             value={selectedTileId}
             onChange={(e) => handleTileChange(e.target.value)}
-            className="bg-transparent text-xs text-white [&>option]:bg-[#14161d] font-bold focus:outline-none cursor-pointer"
+            className="bg-transparent text-[10px] sm:text-xs text-white [&>option]:bg-[#14161d] font-bold focus:outline-none cursor-pointer"
           >
             {TILE_LAYERS.map((t) => (
               <option key={t.id} value={t.id}>
@@ -308,29 +308,29 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
 
         <button
           onClick={handleRecenter}
-          className="bg-[#14161d]/95 hover:bg-[#1b1e28] text-[var(--accent)] border border-[var(--accent)]/40 hover:border-[var(--accent)] backdrop-blur-md px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold transition-all hover:scale-105 active:scale-95"
+          className="bg-[#14161d]/95 hover:bg-[#1b1e28] text-[var(--accent)] border border-[var(--accent)]/40 hover:border-[var(--accent)] backdrop-blur-md px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl shadow-2xl flex items-center gap-1.5 text-[10px] sm:text-xs font-bold transition-all hover:scale-105 active:scale-95"
           title="Beşiktaş Merkezine Odaklan"
           id="recenter-map-top-btn"
         >
-          <span className="text-sm">📍</span> Merkeze Dön (Beşiktaş)
+          <span className="text-sm">📍</span> <span className="hidden sm:inline">Merkeze Dön (Beşiktaş)</span><span className="sm:hidden">Merkez</span>
         </button>
       </div>
       
-      {/* Map Controls: Bottom-Right Merkeze Dön & Zoom Level */}
-      <div className="absolute bottom-6 right-6 z-[1000] flex items-center gap-3">
+      {/* Bottom-Right Controls */}
+      <div className="absolute bottom-4 right-3 sm:bottom-6 sm:right-6 z-[1000] flex items-center gap-2">
         <button
           onClick={handleRecenter}
-          className="bg-[#14161d]/95 hover:bg-[#1b1e28] text-white border border-white/15 hover:border-[var(--accent)]/50 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+          className="hidden sm:flex bg-[#14161d]/95 hover:bg-[#1b1e28] text-white border border-white/15 hover:border-[var(--accent)]/50 backdrop-blur-md px-3 py-2 rounded-xl shadow-2xl items-center gap-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
           title="Merkeze Dön (Beşiktaş)"
           id="recenter-map-bottom-btn"
         >
           <span>🏢</span> Merkeze Dön
         </button>
 
-        <div className="bg-[#14161d]/90 border border-white/15 backdrop-blur-md px-3.5 py-2 rounded-xl shadow-2xl flex items-center gap-2.5 pointer-events-none">
+        <div className="bg-[#14161d]/90 border border-white/15 backdrop-blur-md px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl shadow-2xl flex items-center gap-2 pointer-events-none">
           <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
-          <span className="text-xs font-medium text-gray-300">Yakınlaştırma:</span>
-          <span className="text-sm font-bold text-[var(--accent)] font-mono tabular-nums">{zoomLevel}x</span>
+          <span className="text-[10px] sm:text-xs font-medium text-gray-300">Zoom:</span>
+          <span className="text-xs sm:text-sm font-bold text-[var(--accent)] font-mono tabular-nums">{zoomLevel}x</span>
         </div>
       </div>
     </div>
