@@ -169,8 +169,14 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
         console.log('[db-service] Supabase returned', data.length, 'pins');
         const dbPins = data.map((item: any) => ({
           ...item,
-          coordinates: Array.isArray(item.coordinates) 
-            ? [Number(item.coordinates[0]), Number(item.coordinates[1])] 
+          // Supabase lowercases unquoted camelCase cols — map them explicitly
+          categoryLabel: item.categoryLabel || item.categorylabel || '',
+          fullHistory: item.fullHistory || item.fullhistory || item.description || '',
+          timePeriod: item.timePeriod || item.timeperiod || '1900-1960',
+          // Ensure description is always available for the edit form
+          description: item.description || item.fullHistory || item.fullhistory || '',
+          coordinates: Array.isArray(item.coordinates)
+            ? [Number(item.coordinates[0]), Number(item.coordinates[1])]
             : [41.043, 29.005],
           images: Array.isArray(item.images) ? item.images : []
         })) as PinLocation[];
@@ -225,21 +231,24 @@ export const savePinToDb = async (pin: PinLocation): Promise<PinLocation> => {
 
   if (isSupabaseAvailable()) {
     try {
+      const descriptionText = normalizedPin.description || normalizedPin.fullHistory || normalizedPin.summary || '';
       const { error } = await supabase!
         .from('mekanlar')
         .upsert({
           id: normalizedPin.id,
           title: normalizedPin.title,
           category: normalizedPin.category,
-          categoryLabel: normalizedPin.categoryLabel,
+          // Use quoted names to preserve camelCase in PostgreSQL
+          'categoryLabel': normalizedPin.categoryLabel,
           coordinates: normalizedPin.coordinates,
-          summary: normalizedPin.summary,
-          fullHistory: normalizedPin.fullHistory,
-          images: normalizedPin.images,
+          summary: normalizedPin.summary || descriptionText.slice(0, 200),
+          // Store in BOTH fullHistory and description so any reader finds the text
+          'fullHistory': descriptionText,
+          description: descriptionText,
+          images: normalizedPin.images || [],
           era: normalizedPin.era || null,
           address: normalizedPin.address || null,
-          description: normalizedPin.description || null,
-          timePeriod: normalizedPin.timePeriod,
+          'timePeriod': normalizedPin.timePeriod,
           neighborhood: normalizedPin.neighborhood
         });
 
