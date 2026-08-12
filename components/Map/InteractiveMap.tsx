@@ -2,7 +2,7 @@
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { PinLocation } from "@/data/besiktasPinData";
 
 interface InteractiveMapProps {
@@ -56,6 +56,9 @@ const TILE_LAYERS = [
     maxZoom: 19,
   },
 ];
+
+// Fixed pin size — no longer changes with zoom, so markers don't re-render
+const PIN_SIZE = 32;
 
 export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null!);
@@ -112,7 +115,7 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         zoom: 14,
         minZoom: 10.5,
         maxZoom: 19,
-        zoomControl: true,
+        zoomControl: false, // hide default zoom on mobile, use pinch
         attributionControl: false,
       });
 
@@ -136,7 +139,7 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         if (leafletMapRef.current) {
           leafletMapRef.current.invalidateSize();
         }
-      }, 250);
+      }, 300);
     });
 
     return () => {
@@ -146,9 +149,10 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         leafletMapRef.current = null;
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleTileChange = (newTileId: string) => {
+  const handleTileChange = useCallback((newTileId: string) => {
     setSelectedTileId(newTileId);
     if (leafletMapRef.current && lInstanceRef.current) {
       const L = lInstanceRef.current;
@@ -163,9 +167,10 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       }).addTo(leafletMapRef.current);
       currentTileLayerRef.current = newLayer;
     }
-  }; // empty deps — only once
+  }, []);
 
   // ── Sync markers whenever pins change OR map becomes ready ──
+  // NOTE: zoomLevel is NOT a dependency — pins stay stable during pan/zoom
   useEffect(() => {
     if (!mapReady || !leafletMapRef.current || !lInstanceRef.current) return;
 
@@ -191,19 +196,12 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       markersContainer = L.layerGroup();
     }
 
+    const size = PIN_SIZE;
+    const showEmoji = true;
+
     pins.forEach((pin) => {
       const color = CATEGORY_COLORS[pin.category] ?? "#c5a059";
       const icon = CATEGORY_ICONS[pin.category] ?? "📍";
-
-      let size = 30;
-      if (zoomLevel <= 11) size = 14;
-      else if (zoomLevel === 12) size = 18;
-      else if (zoomLevel === 13) size = 24;
-      else if (zoomLevel === 14) size = 30;
-      else if (zoomLevel === 15) size = 36;
-      else if (zoomLevel >= 16) size = 42;
-
-      const showEmoji = size >= 22;
 
       const divIcon = L.divIcon({
         html: `
@@ -217,7 +215,6 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
             cursor:pointer;
             box-shadow: 0 0 14px ${color}dd, 0 0 28px ${color}77, 0 6px 16px rgba(0,0,0,0.85);
             position:relative;
-            transition: transform 0.2s ease;
           ">
             ${showEmoji ? icon : `<span style="width:6px;height:6px;border-radius:50%;background:#ffffff;"></span>`}
             <span style="
@@ -272,13 +269,13 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
     if (pins.length === 1 && pins[0].coordinates) {
       leafletMapRef.current.flyTo(pins[0].coordinates, 16, { duration: 1 });
     }
-  }, [pins, mapReady, zoomLevel]); // re-runs when pins filter changes OR map becomes ready
+  }, [pins, mapReady]); // NO zoomLevel dependency — pins stay visible during pan/zoom
 
-  const handleRecenter = () => {
+  const handleRecenter = useCallback(() => {
     if (leafletMapRef.current) {
       leafletMapRef.current.flyTo([41.0425, 29.0075], 14, { duration: 1.2 });
     }
-  };
+  }, []);
 
   return (
     <div className="relative w-full h-full">

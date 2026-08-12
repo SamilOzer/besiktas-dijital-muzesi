@@ -36,6 +36,13 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
 
   const hasMultipleImages = eventImages.length > 1;
 
+  // ESC key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -48,24 +55,23 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
       <div
         className="landmark-backdrop"
         onClick={onClose}
-        onWheel={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
         aria-label="Kapat"
       />
       <div
-        className="landmark-modal flex flex-col md:grid md:grid-cols-12 overflow-hidden overscroll-contain"
+        className="landmark-modal flex flex-col md:grid md:grid-cols-12"
         role="dialog"
         aria-modal="true"
         aria-label={event.title}
         id={`event-modal-${event.id}`}
-        onWheel={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
       >
         {/* ── Left Column: Bilgiler (MD: 7 cols) ── */}
-        <div className="md:col-span-7 flex flex-col h-full overflow-y-auto overscroll-contain p-6 md:p-8 order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/10">
+        <div
+          className="md:col-span-7 flex flex-col min-h-0 overflow-y-auto p-5 md:p-8 order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/10"
+          style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+        >
           
           {/* Era + Category + Date badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="flex flex-wrap items-center gap-2 mb-4 flex-shrink-0">
             <span
               className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold"
               style={{ background: `${eraColor}28`, color: eraColor, border: `1px solid ${eraColor}50` }}
@@ -80,32 +86,26 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
             </span>
           </div>
 
-          <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-4 flex-shrink-0">
             {event.title}
           </h2>
 
           {event.location && (
-            <div className="flex items-center gap-2 mb-4 text-sm text-[var(--muted)]">
+            <div className="flex items-center gap-2 mb-4 text-sm text-[var(--muted)] flex-shrink-0">
               <MapPin size={14} style={{ color: eraColor }} />
               <span>{event.location}</span>
             </div>
           )}
 
-          <p
-            className="text-sm text-[var(--muted)] leading-relaxed italic border-l-2 pl-4 mb-5"
-            style={{ borderColor: eraColor }}
-          >
-            {event.summary}
-          </p>
+          <div className="border-t border-white/8 mb-5 flex-shrink-0" />
 
-          <div className="border-t border-white/8 mb-5" />
-
-          <div className="text-sm text-neutral-300 leading-7 whitespace-pre-line mb-6 flex-1">
+          {/* Full description — no summary pull-quote */}
+          <div className="text-sm text-neutral-300 leading-7 whitespace-pre-line mb-6 flex-1 min-h-0">
             {event.fullText || event.description || event.summary}
           </div>
 
           {/* Tags + Share */}
-          <div className="flex items-center justify-between flex-wrap gap-4 pt-2 border-t border-white/8 mt-auto">
+          <div className="flex items-center justify-between flex-wrap gap-4 pt-2 border-t border-white/8 mt-auto flex-shrink-0">
             <div className="flex flex-wrap gap-2">
               {event.tags.map((tag) => (
                 <span
@@ -135,14 +135,15 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
         </div>
 
         {/* ── Right Column: Fotoğraflar & Carousel (MD: 5 cols) ── */}
-        <div className="md:col-span-5 relative h-64 md:h-full bg-[#07080a] flex items-center justify-center order-1 md:order-2 overflow-hidden group">
+        <div className="md:col-span-5 relative flex-shrink-0 h-52 md:h-full bg-[#07080a] flex items-center justify-center order-1 md:order-2 overflow-hidden group">
           {eventImages.length > 0 ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={eventImages[imgIdx]}
               alt={`${event.title} foto ${imgIdx + 1}`}
-              className="w-full h-full object-contain p-2"
+              className="w-full h-full object-contain"
               loading="lazy"
+              style={{ padding: "8px" }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-8xl opacity-10">
@@ -153,52 +154,53 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
           {/* Close button (top right) */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors z-20 shadow-lg border border-white/10"
+            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors z-20 shadow-lg border border-white/10"
             id={`event-modal-close-${event.id}`}
             aria-label="Kapat"
           >
             <X size={18} />
           </button>
 
+          {/* Photo Counter Badge */}
+          {eventImages.length > 0 && (
+            <div className="absolute top-3 left-3 px-3 py-1.5 rounded-lg bg-black/70 backdrop-blur-md text-xs text-white font-semibold border border-white/15 z-20 flex items-center gap-1.5">
+              <span>📷</span>
+              <span>{imgIdx + 1} / {eventImages.length}</span>
+            </div>
+          )}
+
           {/* Carousel Arrows */}
           {hasMultipleImages && (
             <>
               <button
                 onClick={() => setImgIdx((i) => (i === 0 ? eventImages.length - 1 : i - 1))}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all z-20 border border-white/10"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all z-20 border border-white/10"
                 aria-label="Önceki fotoğraf"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={20} />
               </button>
               <button
                 onClick={() => setImgIdx((i) => (i + 1) % eventImages.length)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all z-20 border border-white/10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all z-20 border border-white/10"
                 aria-label="Sonraki fotoğraf"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={20} />
               </button>
 
               {/* Dots */}
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-20">
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 z-20">
                 {eventImages.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setImgIdx(i)}
-                    className={`h-1.5 rounded-full transition-all ${
-                      i === imgIdx ? "bg-[var(--accent)] w-5" : "bg-white/40 w-1.5"
+                    className={`h-2 rounded-full transition-all ${
+                      i === imgIdx ? "bg-[var(--accent)] w-6" : "bg-white/40 w-2"
                     }`}
                     aria-label={`Fotoğraf ${i + 1}`}
                   />
                 ))}
               </div>
             </>
-          )}
-
-          {/* Photo Counter */}
-          {eventImages.length > 0 && (
-            <div className="absolute top-4 left-4 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-[11px] text-white/80 font-mono border border-white/10 z-20">
-              {imgIdx + 1} / {eventImages.length}
-            </div>
           )}
         </div>
 
