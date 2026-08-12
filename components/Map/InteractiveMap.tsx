@@ -190,19 +190,8 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
       leafletMapRef.current.removeLayer(clusterGroupRef.current);
     }
 
-    const createClusterGroup = (L as any).markerClusterGroup;
-    let markersContainer: any;
-    if (typeof createClusterGroup === "function") {
-      markersContainer = createClusterGroup({
-        showCoverageOnHover: false,
-        maxClusterRadius: 10,
-        disableClusteringAtZoom: 13,
-        spiderfyOnMaxZoom: true,
-        spiderfyDistanceMultiplier: 2.2,
-      });
-    } else {
-      markersContainer = L.layerGroup();
-    }
+    // Standard layer group (no clustering to ensure every pin is individually visible)
+    let markersContainer: any = L.layerGroup();
 
     const size = PIN_SIZE;
     const showEmoji = true;
@@ -266,7 +255,7 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
           box-shadow:0 4px 16px rgba(0,0,0,0.5);
         ">
           <strong style="color:${color}">${pin.title}</strong><br>
-          <span style="color:#9ca3af;font-size:11px">${pin.categoryLabel}</span>
+          <span style="color:#9ca3af;font-size:11px">${pin.categoryLabel || pin.category}</span>
           ${pin.era ? `<br><span style="color:#6b7280;font-size:10px">📅 ${pin.era}</span>` : ""}
         </div>`,
         {
@@ -280,14 +269,31 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
 
       markersContainer.addLayer(marker);
     });
-    
+
     leafletMapRef.current.addLayer(markersContainer);
     clusterGroupRef.current = markersContainer;
 
-    if (pins.length === 1 && pins[0].coordinates) {
-      leafletMapRef.current.flyTo(pins[0].coordinates, 16, { duration: 1 });
+    // Automatically zoom & pan map to fit ALL filtered pins on screen
+    if (pins.length > 0) {
+      const validCoords = pins
+        .map((p) => p.coordinates)
+        .filter((c) => Array.isArray(c) && c.length === 2 && !isNaN(c[0]) && !isNaN(c[1]));
+
+      if (validCoords.length === 1) {
+        leafletMapRef.current.flyTo(validCoords[0], 16, { duration: 0.8 });
+      } else if (validCoords.length > 1) {
+        const bounds = L.latLngBounds(validCoords);
+        if (bounds.isValid()) {
+          leafletMapRef.current.fitBounds(bounds, {
+            padding: [60, 60],
+            maxZoom: 16,
+            animate: true,
+            duration: 0.8,
+          });
+        }
+      }
     }
-  }, [pins, mapReady]); // NO zoomLevel dependency — pins stay visible during pan/zoom
+  }, [pins, mapReady]);
 
   const handleRecenter = useCallback(() => {
     if (leafletMapRef.current) {
