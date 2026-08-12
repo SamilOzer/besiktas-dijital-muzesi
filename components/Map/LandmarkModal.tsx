@@ -214,94 +214,117 @@ export default function LandmarkModal({ pin, onClose }: LandmarkModalProps) {
               style={{
                 flex: 1,
                 minHeight: 0,
-                overflow: "hidden",
-                overflowY: "auto",
-                WebkitOverflowScrolling: "touch" as any,
-                padding: "24px",
                 display: "flex",
                 flexDirection: "column",
                 order: 1,
                 borderRight: "1px solid rgba(255,255,255,0.08)",
+                background: "var(--panel)",
+                overflow: "hidden",
               }}
             >
-              {/* Category & Era badges */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16, flexShrink: 0 }}>
-                <span style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700,
-                  background: `${color}28`, color, border: `1px solid ${color}50`,
-                }}>
-                  {catIcon} {pin.categoryLabel}
-                </span>
-                {pin.era && (
+              {/* Scrollable Content Area */}
+              <div
+                className="text-col-body"
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  WebkitOverflowScrolling: "touch" as any,
+                  padding: "24px",
+                }}
+              >
+                {/* Category & Era badges */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                   <span style={{
-                    display: "inline-flex", alignItems: "center",
-                    padding: "4px 12px", borderRadius: 999, fontSize: 12, fontWeight: 500,
-                    background: "rgba(255,255,255,0.06)", color: "var(--muted)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700,
+                    background: `${color}28`, color, border: `1px solid ${color}50`,
                   }}>
-                    📅 {pin.era}
+                    {catIcon} {pin.categoryLabel}
                   </span>
+                  {pin.era && (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center",
+                      padding: "4px 12px", borderRadius: 999, fontSize: 12, fontWeight: 500,
+                      background: "rgba(255,255,255,0.06)", color: "var(--muted)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}>
+                      📅 {pin.era}
+                    </span>
+                  )}
+                </div>
+
+                {/* Title */}
+                <h2 style={{ fontSize: "clamp(20px, 3vw, 28px)", fontWeight: 700, color: "#fff", lineHeight: 1.3, marginBottom: 16 }}>
+                  {pin.title}
+                </h2>
+
+                {/* Address */}
+                {pin.address && (
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16, fontSize: 14, color: "var(--muted)" }}>
+                    <MapPin size={15} style={{ marginTop: 2, flexShrink: 0, color }} />
+                    <span>{pin.address}</span>
+                  </div>
                 )}
+
+                <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 16 }} />
+
+                {/* Full description */}
+                <div>
+                  <h3 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color, marginBottom: 12 }}>
+                    Tarihçe & Açıklama
+                  </h3>
+                  <p style={{ fontSize: 14, color: "#d4d4d4", lineHeight: 1.8, whiteSpace: "pre-line" }}>
+                    {pin.description || pin.fullHistory || pin.summary}
+                  </p>
+                </div>
               </div>
 
-              {/* Title */}
-              <h2 style={{ fontSize: "clamp(20px, 3vw, 28px)", fontWeight: 700, color: "#fff", lineHeight: 1.3, marginBottom: 16, flexShrink: 0 }}>
-                {pin.title}
-              </h2>
-
-              {/* Address */}
-              {pin.address && (
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16, fontSize: 14, color: "var(--muted)", flexShrink: 0 }}>
-                  <MapPin size={15} style={{ marginTop: 2, flexShrink: 0, color }} />
-                  <span>{pin.address}</span>
+              {/* Fixed Bottom Footer */}
+              <div
+                className="text-col-footer"
+                style={{
+                  flexShrink: 0,
+                  padding: "16px 24px",
+                  background: "#14161d",
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: "flex", gap: 12 }}>
+                  <button
+                    onClick={handleDirections}
+                    style={{
+                      flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                      gap: 8, padding: "12px 20px", borderRadius: 12, fontWeight: 600,
+                      fontSize: 14, border: "none", cursor: "pointer",
+                      background: color, color: "#0d0e12",
+                    }}
+                    id={`landmark-directions-${pin.id}`}
+                  >
+                    <Navigation size={15} /> Yol Tarifi
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      gap: 8, padding: "12px 20px", borderRadius: 12, fontWeight: 500,
+                      fontSize: 14, cursor: "pointer",
+                      background: "rgba(255,255,255,0.05)", color: "var(--muted)",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                    }}
+                    id={`landmark-share-${pin.id}`}
+                  >
+                    <Share2 size={15} /> Paylaş
+                  </button>
                 </div>
-              )}
 
-              <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 16, flexShrink: 0 }} />
-
-              {/* Full description only — no summary */}
-              <div style={{ flex: 1, minHeight: 0, marginBottom: 24 }}>
-                <h3 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color, marginBottom: 12 }}>
-                  Tarihçe & Açıklama
-                </h3>
-                <p style={{ fontSize: 14, color: "#d4d4d4", lineHeight: 1.8, whiteSpace: "pre-line" }}>
-                  {pin.description || pin.fullHistory || pin.summary}
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontFamily: "monospace", margin: 0 }}>
+                  📍 {pin.coordinates[0].toFixed(5)}°N &nbsp; {pin.coordinates[1].toFixed(5)}°E
                 </p>
               </div>
-
-              {/* Actions */}
-              <div style={{ display: "flex", gap: 12, marginBottom: 16, flexShrink: 0 }}>
-                <button
-                  onClick={handleDirections}
-                  style={{
-                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-                    gap: 8, padding: "12px 20px", borderRadius: 12, fontWeight: 600,
-                    fontSize: 14, border: "none", cursor: "pointer",
-                    background: color, color: "#0d0e12",
-                  }}
-                  id={`landmark-directions-${pin.id}`}
-                >
-                  <Navigation size={15} /> Yol Tarifi
-                </button>
-                <button
-                  onClick={handleShare}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    gap: 8, padding: "12px 20px", borderRadius: 12, fontWeight: 500,
-                    fontSize: 14, cursor: "pointer",
-                    background: "transparent", color: "var(--muted)",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                  }}
-                  id={`landmark-share-${pin.id}`}
-                >
-                  <Share2 size={15} /> Paylaş
-                </button>
-              </div>
-
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "monospace", flexShrink: 0 }}>
-                📍 {pin.coordinates[0].toFixed(5)}°N &nbsp; {pin.coordinates[1].toFixed(5)}°E
-              </p>
             </div>
           </div>
         </div>
