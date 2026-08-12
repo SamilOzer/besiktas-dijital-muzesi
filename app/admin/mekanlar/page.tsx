@@ -135,14 +135,15 @@ export default function MekanlarPage() {
 
   const openEditDialog = (row: PinLocation) => {
     setEditingId(row.id);
+    const existingDesc = (row as any).description || row.fullHistory || row.summary || '';
     reset({
-      title: row.title,
+      title: row.title || '',
       category: row.category as any,
       timePeriod: row.timePeriod as any,
       neighborhood: row.neighborhood as any,
       address: row.address || '',
-      summary: row.fullHistory || row.summary || '',
-      description: (row as any).description || '',
+      summary: row.summary || existingDesc.slice(0, 200),
+      description: existingDesc,
       era: row.era || '',
       lat: row.coordinates?.[0] ?? 41.043,
       lng: row.coordinates?.[1] ?? 29.005,
@@ -181,7 +182,7 @@ export default function MekanlarPage() {
         categoryLabel: categoryLabels[data.category],
         fullHistory: descriptionText,
         summary: descriptionText.slice(0, 200),
-        description: data.description,
+        description: descriptionText,
         coordinates: finalCoordinates,
         images: data.images?.filter(img => img.trim() !== '') || [],
       });
@@ -192,7 +193,7 @@ export default function MekanlarPage() {
         categoryLabel: categoryLabels[data.category],
         fullHistory: descriptionText,
         summary: descriptionText.slice(0, 200),
-        description: data.description,
+        description: descriptionText,
         coordinates: finalCoordinates,
         images: data.images?.filter(img => img.trim() !== '') || [],
       });
