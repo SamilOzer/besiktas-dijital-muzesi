@@ -84,8 +84,20 @@ export default function HaritaPage() {
     }
   }, []);
 
-  const reloadPins = useCallback(() => {
-    setPins(loadAllPins());
+  const reloadPins = useCallback(async () => {
+    // 1. Render immediately from local storage/defaults (zero delay)
+    const initialPins = loadAllPins();
+    setPins(initialPins);
+
+    // 2. Async fetch fresh pins from Supabase DB so all PCs/devices sync
+    try {
+      const dbPins = await fetchPinsFromDb();
+      if (dbPins && dbPins.length > 0) {
+        setPins(dbPins);
+      }
+    } catch (err) {
+      console.warn("[harita] Error fetching pins from Supabase DB:", err);
+    }
   }, []);
 
   useEffect(() => {
