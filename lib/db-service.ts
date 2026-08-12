@@ -24,12 +24,21 @@ const markSupabaseFailed = () => {
 
 const VALID_CATEGORIES = ["heykeller", "saraylar", "tarihi-yapilar", "spor", "dini-kamusal"];
 
+const CATEGORY_LABELS: Record<string, string> = {
+  heykeller: "Heykeller & Anıtlar",
+  saraylar: "Saraylar & Kasırlar",
+  "tarihi-yapilar": "Tarihi Evler & Yapılar",
+  spor: "Stadyum & Spor Tarihi",
+  "dini-kamusal": "Dini & Kamusal Yapılar",
+};
+
 export const normalizePinData = (pin: PinLocation): PinLocation => {
   let cat = (pin.category || "").toLowerCase().trim();
-  if (cat.includes("heykel") || cat.includes("anıt")) cat = "heykeller";
-  else if (cat.includes("saray") || cat.includes("kasır")) cat = "saraylar";
-  else if (cat.includes("spor") || cat.includes("stadyum")) cat = "spor";
-  else if (cat.includes("dini") || cat.includes("camii") || cat.includes("kamusal")) cat = "dini-kamusal";
+  if (cat.includes("heykel") || cat.includes("anıt") || cat.includes("anit")) cat = "heykeller";
+  else if (cat.includes("saray") || cat.includes("kasır") || cat.includes("kasir")) cat = "saraylar";
+  else if (cat.includes("spor") || cat.includes("stadyum") || cat.includes("stad")) cat = "spor";
+  else if (cat.includes("dini") || cat.includes("camii") || cat.includes("cami") || cat.includes("kamusal")) cat = "dini-kamusal";
+  else if (cat.includes("tarihi") || cat.includes("yapi") || cat.includes("yapı") || cat.includes("ev") || cat.includes("konut") || cat.includes("kültür") || cat.includes("kulturel") || cat.includes("diger") || cat.includes("diğer")) cat = "tarihi-yapilar";
   else if (!VALID_CATEGORIES.includes(cat)) cat = "tarihi-yapilar";
 
   let period = (pin.timePeriod || "").trim();
@@ -38,11 +47,13 @@ export const normalizePinData = (pin: PinLocation): PinLocation => {
   else if (period.includes("tanzimat") && !period.includes("hamidiye")) period = "1800-1850";
   else if (period.includes("hamidiye")) period = "1850-1900";
   else if (period.includes("cumhuriyet") || period.includes("meşrutiyet")) period = "1900-1960";
-  else if (!["1400-1600","1600-1800","1800-1850","1850-1900","1900-1960"].includes(period)) period = "1900-1960";
+  else if (period.includes("günümüz") || period.includes("gunumuz") || period.includes("1960")) period = "1960-gunumuz";
+  else if (!["1400-1600","1600-1800","1800-1850","1850-1900","1900-1960","1960-gunumuz"].includes(period)) period = "1900-1960";
 
   return {
     ...pin,
     category: cat as any,
+    categoryLabel: CATEGORY_LABELS[cat] || pin.categoryLabel || "Tarihi Evler & Yapılar",
     timePeriod: period as any,
     neighborhood: pin.neighborhood || "Sinanpaşa",
     coordinates: Array.isArray(pin.coordinates) && pin.coordinates.length === 2 && !isNaN(Number(pin.coordinates[0]))

@@ -305,4 +305,72 @@ export const besiktasPinData: PinLocation[] = [
     ],
     era: "20. Yüzyıl (Cumhuriyet Dönemi)",
   },
+  {
+    id: "ortakoy-yalilari",
+    title: "Naime Sultan & Hatice Sultan Yalısı (Ortaköy Yalıları)",
+    category: "tarihi-yapilar",
+    categoryLabel: "Tarihi Evler & Yapılar",
+    coordinates: [41.0490, 29.0278],
+    address: "Ortaköy Salhanesi Sk. No:1, 34347 Ortaköy/Beşiktaş/İstanbul",
+    timePeriod: "1850-1900",
+    neighborhood: "Ortaköy",
+    summary: "Boğaz kıyısında yükselen, Osmanlı hanedanından sultanlara ait görkemli neo-barok sahil sarayı yalıları.",
+    fullHistory:
+      "19. yüzyılın sonlarında Sultan II. Abdülhamid tarafından kızları Naime Sultan ve Hatice Sultan için inşa ettirilen bu görkemli sahil sarayları, Boğaziçi sivil mimarisinin en seçkin örneklerindendir. Zengin ahşap süslemeleri, geniş cumba yapıları ve denizle bütünleşen rıhtımıyla Ortaköy sahilinin tarihi dokusuna damga vurmaktadır.",
+    images: [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Ortakoy_mosque_%28Mecidiye_Mosque%29_and_Bosphorus_bridge.jpg/1280px-Ortakoy_mosque_%28Mecidiye_Mosque%29_and_Bosphorus_bridge.jpg"
+    ],
+    era: "19. Yüzyıl (Hamidiye Dönemi)",
+  },
+  {
+    id: "misir-konsoloslugu-hidiva-palas",
+    title: "Mısır Konsolosluğu (Hidiva Sarayı)",
+    category: "tarihi-yapilar",
+    categoryLabel: "Tarihi Evler & Yapılar",
+    coordinates: [41.0770, 29.0438],
+    address: "Cevdet Paşa Cd. No:12, 34342 Bebek/Beşiktaş/İstanbul",
+    timePeriod: "1900-1960",
+    neighborhood: "Bebek",
+    summary: "Bebek sahilinde yer alan, mimar Raimondo D'Aronco imzalı dünyaca ünlü Art Nouveau şaheseri sahil sarayı.",
+    fullHistory:
+      "1902 yılında Mısır Hıdivi Abbas Hilmi Paşa'nın annesi Hıdiva Emine Valide Paşa tarafından İtalyan mimar Raimondo D'Aronco'ya yaptırılan bina, İstanbul'daki Art Nouveau mimarisinin en görkemli örneğidir. Boğaz'a sıfır rıhtımı ve zarif mermer detaylarıyla Bebek koyunun simgesidir.",
+    images: [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Egyptian_Consulate_in_Istanbul.jpg/1280px-Egyptian_Consulate_in_Istanbul.jpg"
+    ],
+    era: "1902 (II. Meşrutiyet Dönemi)",
+  },
+  {
+    id: "seyh-zafir-kulliyesi",
+    title: "Şeyh Zafir Türbesi & Kütüphanesi",
+    category: "tarihi-yapilar",
+    categoryLabel: "Tarihi Evler & Yapılar",
+    coordinates: [41.0458, 29.0068],
+    address: "Serencebey Yokuşu No:12, 34349 Cihannüma/Beşiktaş/İstanbul",
+    timePeriod: "1900-1960",
+    neighborhood: "Cihannüma",
+    summary: "Sultan II. Abdülhamid döneminde Raimondo D'Aronco tarafından tasarlanan ikonik Art Nouveau türbe ve kütüphane kompleksi.",
+    fullHistory:
+      "1905-1906 yıllarında inşa edilen kompleks; türbe, kütüphane ve çeşmeden oluşmaktadır. Saray mimarı Raimondo D'Aronco'nun doğu ve batı motiflerini harmanlayarak ortaya koyduğu bu özgün yapı, İstanbul'un taş mimarisindeki en zarif Art Nouveau detaylara sahiptir.",
+    images: [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Barbaros_Hey.jpg/800px-Barbaros_Hey.jpg"
+    ],
+    era: "1905 (II. Meşrutiyet Dönemi)",
+  },
+  {
+    id: "besiktas-tarihi-carsisi",
+    title: "Tarihi Beşiktaş Çarşısı & Köyiçi",
+    category: "tarihi-yapilar",
+    categoryLabel: "Tarihi Evler & Yapılar",
+    coordinates: [41.0438, 29.0048],
+    address: "Köyiçi Sk., Sinanpaşa Mah., 34353 Beşiktaş/İstanbul",
+    timePeriod: "1900-1960",
+    neighborhood: "Sinanpaşa",
+    summary: "Geleneksel mahalle yaşamının, pasajların ve tarihi esnaf kültürünün canlı olarak yaşatıldığı Beşiktaş'ın merkezi.",
+    fullHistory:
+      "Osmanlı döneminden bu yana Beşiktaş'ın ticari ve sosyal yaşamının kalbi olan Köyiçi bölgesi; kartal heykelli meydanı, tarihi balık pazarı, dar sokakları ve cumbalı eski dükkanlarıyla yaşayan bir kent mirasıdır.",
+    images: [
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Akaretler_row_houses_Besiktas_Istanbul.jpg/1280px-Akaretler_row_houses_Besiktas_Istanbul.jpg"
+    ],
+    era: "19. Yüzyıl – Günümüz",
+  },
 ];

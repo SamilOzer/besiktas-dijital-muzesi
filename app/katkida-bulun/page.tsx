@@ -123,12 +123,13 @@ export default function KatkidaBulunPage() {
                     <input required type="text" name="title" className={inputClass} placeholder="Örn: Tarihi İskele" />
                   </div>
                   <div>
-                    <label className={labelClass}>Kategori</label>
-                    <select name="category" className={inputClass}>
-                      <option value="tarihi">Tarihi Yapı</option>
-                      <option value="kulturel">Kültürel Mekan</option>
-                      <option value="dini">Dini Yapı</option>
-                      <option value="diger">Diğer</option>
+                    <label className={labelClass}>Kategori *</label>
+                    <select required name="category" className={inputClass}>
+                      <option value="tarihi-yapilar">Tarihi Evler &amp; Yapılar</option>
+                      <option value="heykeller">Heykeller &amp; Anıtlar</option>
+                      <option value="saraylar">Saraylar &amp; Kasırlar</option>
+                      <option value="spor">Stadyum &amp; Spor Tarihi</option>
+                      <option value="dini-kamusal">Dini &amp; Kamusal Yapılar</option>
                     </select>
                   </div>
                 </div>
@@ -142,12 +143,14 @@ export default function KatkidaBulunPage() {
                     </select>
                   </div>
                   <div>
-                    <label className={labelClass}>Dönem</label>
-                    <select name="timePeriod" className={inputClass}>
-                      <option value="osmanli">Osmanlı</option>
-                      <option value="cumhuriyet">Cumhuriyet</option>
-                      <option value="bizans">Bizans</option>
-                      <option value="diger">Diğer</option>
+                    <label className={labelClass}>Dönem *</label>
+                    <select required name="timePeriod" className={inputClass}>
+                      <option value="1400-1600">1400-1600 (Osmanlı Klasik)</option>
+                      <option value="1600-1800">1600-1800 (Osmanlı Orta)</option>
+                      <option value="1800-1850">1800-1850 (Erken Tanzimat)</option>
+                      <option value="1850-1900">1850-1900 (Tanzimat &amp; Hamidiye)</option>
+                      <option value="1900-1960">1900-1960 (Meşrutiyet &amp; Cumhuriyet)</option>
+                      <option value="1960-gunumuz">1960-Günümüz</option>
                     </select>
                   </div>
                 </div>
