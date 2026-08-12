@@ -55,16 +55,7 @@ function loadAllPins(): PinLocation[] {
 
   const result = Array.from(pinMap.values());
 
-  // Auto-refresh client localStorage with normalized pins
-  try {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
-    }
-  } catch (err) {
-    console.warn("[harita] Failed to sync localStorage:", err);
-  }
-
-  console.log(`[harita] loadAllPins: ${result.length} pins loaded and normalized.`);
+  console.log(`[harita] loadAllPins: ${result.length} pins loaded from localStorage.`);
   return result;
 }
 

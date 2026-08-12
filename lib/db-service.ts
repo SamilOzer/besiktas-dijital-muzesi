@@ -5,9 +5,9 @@ import { ansiklopediData, HistoricalEvent } from '@/data/ansiklopediData';
 const LOCAL_STORAGE_KEY = 'besiktas_mekanlar_db';
 const LOCAL_STORAGE_OLAYLAR_KEY = 'besiktas_olaylar_db';
 
-// Cache Supabase failures — skip retries for 5 minutes after a failure
+// Cache Supabase failures — skip retries for 30 seconds after a failure
 let supabaseFailedAt: number | null = null;
-const SUPABASE_RETRY_DELAY_MS = 5 * 60 * 1000; // 5 minutes
+const SUPABASE_RETRY_DELAY_MS = 30 * 1000; // 30 seconds
 
 const isSupabaseAvailable = (): boolean => {
   if (!isSupabaseConfigured || !supabase) return false;
@@ -67,7 +67,7 @@ const getLocalMekanlar = (): PinLocation[] => {
   if (typeof window === 'undefined') return besiktasPinData.map(normalizePinData);
   try {
     const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!data) {
+      if (!data) {
       console.log('[db-service] localStorage empty, seeding with', besiktasPinData.length, 'defaults');
       const normalizedDefaults = besiktasPinData.map(normalizePinData);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedDefaults));
@@ -75,16 +75,7 @@ const getLocalMekanlar = (): PinLocation[] => {
     }
     const parsed = JSON.parse(data);
     const list = Array.isArray(parsed) ? parsed : [];
-    
-    // Always guarantee besiktasPinData default landmarks are present
-    const combined = [...list];
-    besiktasPinData.forEach((bp) => {
-      if (!combined.some((item) => item.id === bp.id)) {
-        combined.push(bp);
-      }
-    });
-
-    const result = combined.map(normalizePinData);
+    const result = list.map(normalizePinData);
     console.log('[db-service] getLocalMekanlar: loaded', result.length, 'pins');
     return result;
   } catch (error) {
