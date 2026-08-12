@@ -140,6 +140,7 @@ export const fetchMekanlar = async (): Promise<PinLocation[]> => {
     const dbMekanlar = await fetchPinsFromDb();
     if (dbMekanlar && dbMekanlar.length > 0) {
       mekanlar = dbMekanlar;
+      return [...mekanlar]; // Return directly to avoid stale localStorage issues
     }
   } catch (err) {
     console.error("Error fetching mekanlar from database:", err);

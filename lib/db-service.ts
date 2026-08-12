@@ -181,27 +181,9 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
           images: Array.isArray(item.images) ? item.images : []
         })) as PinLocation[];
         
-        // Merge dbPins, localList, and besiktasPinData without duplicating IDs
-        const mergedList = [...dbPins];
-        let localOnlyCount = 0;
-
-        localList.forEach((lp) => {
-          if (!mergedList.some((dp) => dp.id === lp.id)) {
-            mergedList.push(lp);
-            localOnlyCount++;
-          }
-        });
-
-        besiktasPinData.forEach((bp) => {
-          if (!mergedList.some((mp) => mp.id === bp.id)) {
-            mergedList.push(bp);
-          }
-        });
-
-        console.log('[db-service] Merged list total:', mergedList.length, 'pins (', localOnlyCount, 'local-only)');
-
-        saveLocalMekanlar(mergedList);
-        return mergedList.map(normalizePinData);
+        console.log('[db-service] Returning', dbPins.length, 'pins directly from Supabase');
+        saveLocalMekanlar(dbPins);
+        return dbPins.map(normalizePinData);
       } else {
         console.log('[db-service] Supabase returned 0 pins, using localStorage');
       }
