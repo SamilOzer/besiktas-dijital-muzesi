@@ -29,9 +29,7 @@ export default function LandmarkModal({ pin, onClose }: LandmarkModalProps) {
   const [imgIndex, setImgIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   // ESC key
   useEffect(() => {
@@ -70,168 +68,243 @@ export default function LandmarkModal({ pin, onClose }: LandmarkModalProps) {
   return createPortal(
     <>
       {/* ── Backdrop ── */}
-      <div
-        className="landmark-backdrop"
-        onClick={onClose}
-        aria-label="Kapat"
-      />
+      <div className="landmark-backdrop" onClick={onClose} aria-label="Kapat" />
 
-      {/* ── 2-Column Landscape Modal ── */}
+      {/* ── Modal: desktop=grid, mobile=flex-col via CSS ── */}
       <div
-        className="landmark-modal flex flex-col md:grid md:grid-cols-12"
+        className="landmark-modal"
         role="dialog"
         aria-modal="true"
         aria-label={pin.title}
         id={`landmark-modal-${pin.id}`}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gridTemplateRows: "1fr",
+        }}
       >
-        {/* ── Left Column: Bilgiler (MD: 7 cols) ── */}
-        <div
-          className="md:col-span-7 flex flex-col min-h-0 overflow-y-auto p-5 md:p-8 order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/10"
-          style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
-        >
-          
-          {/* Category & Era badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-4 flex-shrink-0">
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
-              style={{ background: `${color}28`, color, border: `1px solid ${color}50` }}
-            >
-              {catIcon} {pin.categoryLabel}
-            </span>
-            {pin.era && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/6 text-[var(--muted)] border border-white/10">
-                📅 {pin.era}
-              </span>
-            )}
-          </div>
-
-          {/* Title */}
-          <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-4 flex-shrink-0">
-            {pin.title}
-          </h2>
-
-          {/* Address */}
-          {pin.address && (
-            <div className="flex items-start gap-2 mb-4 text-sm text-[var(--muted)] flex-shrink-0">
-              <MapPin size={15} className="mt-0.5 flex-shrink-0" style={{ color }} />
-              <span>{pin.address}</span>
-            </div>
-          )}
-
-          <div className="border-t border-white/8 mb-5 flex-shrink-0" />
-
-          {/* Full description */}
-          <div className="mb-6 flex-1 min-h-0">
-            <h3
-              className="text-xs font-bold uppercase tracking-widest mb-3 flex-shrink-0"
-              style={{ color }}
-            >
-              Tarihçe & Açıklama
-            </h3>
-            <p className="text-sm text-neutral-300 leading-7 whitespace-pre-line">
-              {pin.description || pin.fullHistory || pin.summary}
-            </p>
-          </div>
-
-          {/* Actions & Coordinates */}
-          <div className="space-y-4 pt-2 mt-auto flex-shrink-0">
-            <div className="flex gap-3">
-              <button
-                onClick={handleDirections}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 shadow-md"
-                style={{ background: color, color: "#0d0e12" }}
-                id={`landmark-directions-${pin.id}`}
-              >
-                <Navigation size={15} />
-                Yol Tarifi
-              </button>
-              <button
-                onClick={handleShare}
-                className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl border border-white/15 text-[var(--muted)] text-sm hover:border-white/30 hover:text-white transition-all"
-                id={`landmark-share-${pin.id}`}
-              >
-                <Share2 size={15} />
-                Paylaş
-              </button>
-            </div>
-
-            <p className="text-[11px] text-white/30 font-mono">
-              📍 Koordinatlar: {pin.coordinates[0].toFixed(5)}°N &nbsp; {pin.coordinates[1].toFixed(5)}°E
-            </p>
-          </div>
-
-        </div>
-
-        {/* ── Right Column: Fotoğraflar & Carousel (MD: 5 cols) ── */}
-        <div className="md:col-span-5 relative flex-shrink-0 h-52 md:h-full bg-[#07080a] flex items-center justify-center order-1 md:order-2 overflow-hidden group">
-          {displayImages.length > 0 ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={displayImages[imgIndex]}
-              alt={`${pin.title} foto ${imgIndex + 1}`}
-              className="w-full h-full object-contain"
-              loading="lazy"
-              style={{ padding: "8px" }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-8xl opacity-10">
-              <span>{catIcon}</span>
-            </div>
-          )}
-
-          {/* Close button (top right) */}
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/70 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors z-20 shadow-lg border border-white/10"
-            aria-label="Kapat"
-            id="landmark-modal-close"
+        {/* Inner wrapper: side-by-side on desktop, stacked on mobile */}
+        <div style={{ display: "flex", flexDirection: "column", overflow: "hidden", height: "100%" }}>
+          {/* Desktop: use a row layout wrapper */}
+          <div
+            className="modal-inner-grid"
+            style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "row", overflow: "hidden" }}
           >
-            <X size={18} />
-          </button>
+            {/* ── Photo Column (right on desktop, top on mobile) ── */}
+            <div
+              className="photo-col"
+              style={{
+                position: "relative",
+                background: "#07080a",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                flexShrink: 0,
+                // Desktop: 42% width, full height
+                width: "42%",
+                order: 2,
+              }}
+            >
+              {displayImages.length > 0 ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={displayImages[imgIndex]}
+                  alt={`${pin.title} foto ${imgIndex + 1}`}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    padding: "8px",
+                    display: "block",
+                  }}
+                  loading="lazy"
+                />
+              ) : (
+                <div style={{ fontSize: 80, opacity: 0.1 }}>{catIcon}</div>
+              )}
 
-          {/* Photo Counter Badge */}
-          {displayImages.length > 0 && (
-            <div className="absolute top-3 left-3 px-3 py-1.5 rounded-lg bg-black/70 backdrop-blur-md text-xs text-white font-semibold border border-white/15 z-20 flex items-center gap-1.5">
-              <span>📷</span>
-              <span>{imgIndex + 1} / {displayImages.length}</span>
-            </div>
-          )}
-
-          {/* Carousel Arrows */}
-          {hasMultipleImages && (
-            <>
+              {/* Close button */}
               <button
-                onClick={() => setImgIndex((i) => (i === 0 ? displayImages.length - 1 : i - 1))}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all z-20 border border-white/10"
-                aria-label="Önceki fotoğraf"
+                onClick={onClose}
+                style={{
+                  position: "absolute", top: 12, right: 12,
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.15)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#fff", cursor: "pointer", zIndex: 20,
+                }}
+                aria-label="Kapat"
+                id="landmark-modal-close"
               >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={() => setImgIndex((i) => (i + 1) % displayImages.length)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/90 transition-all z-20 border border-white/10"
-                aria-label="Sonraki fotoğraf"
-              >
-                <ChevronRight size={20} />
+                <X size={18} />
               </button>
 
-              {/* Dots */}
-              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 z-20">
-                {displayImages.map((_, i) => (
+              {/* Photo counter */}
+              {displayImages.length > 0 && (
+                <div style={{
+                  position: "absolute", top: 12, left: 12,
+                  background: "rgba(0,0,0,0.75)", borderRadius: 8,
+                  padding: "5px 10px", fontSize: 12, color: "#fff",
+                  fontWeight: 600, border: "1px solid rgba(255,255,255,0.15)",
+                  display: "flex", alignItems: "center", gap: 6, zIndex: 20,
+                }}>
+                  <span>📷</span>
+                  <span>{imgIndex + 1} / {displayImages.length}</span>
+                </div>
+              )}
+
+              {/* Carousel arrows */}
+              {hasMultipleImages && (
+                <>
                   <button
-                    key={i}
-                    onClick={() => setImgIndex(i)}
-                    className={`h-2 rounded-full transition-all ${
-                      i === imgIndex ? "bg-[var(--accent)] w-6" : "bg-white/40 w-2"
-                    }`}
-                    aria-label={`Fotoğraf ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+                    onClick={() => setImgIndex(i => i === 0 ? displayImages.length - 1 : i - 1)}
+                    style={{
+                      position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)",
+                      width: 40, height: 40, borderRadius: "50%",
+                      background: "rgba(0,0,0,0.65)", border: "1px solid rgba(255,255,255,0.15)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: "#fff", cursor: "pointer", zIndex: 20,
+                    }}
+                    aria-label="Önceki fotoğraf"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={() => setImgIndex(i => (i + 1) % displayImages.length)}
+                    style={{
+                      position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                      width: 40, height: 40, borderRadius: "50%",
+                      background: "rgba(0,0,0,0.65)", border: "1px solid rgba(255,255,255,0.15)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: "#fff", cursor: "pointer", zIndex: 20,
+                    }}
+                    aria-label="Sonraki fotoğraf"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
 
+                  {/* Dots */}
+                  <div style={{
+                    position: "absolute", bottom: 12, left: 0, right: 0,
+                    display: "flex", justifyContent: "center", gap: 8, zIndex: 20,
+                  }}>
+                    {displayImages.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setImgIndex(i)}
+                        style={{
+                          height: 8, borderRadius: 4,
+                          width: i === imgIndex ? 24 : 8,
+                          background: i === imgIndex ? "#c5a059" : "rgba(255,255,255,0.4)",
+                          border: "none", cursor: "pointer", transition: "all 0.2s",
+                          padding: 0,
+                        }}
+                        aria-label={`Fotoğraf ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* ── Text Column (left on desktop, bottom on mobile) ── */}
+            <div
+              className="text-col"
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflow: "hidden",
+                overflowY: "auto",
+                WebkitOverflowScrolling: "touch" as any,
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                order: 1,
+                borderRight: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              {/* Category & Era badges */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16, flexShrink: 0 }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700,
+                  background: `${color}28`, color, border: `1px solid ${color}50`,
+                }}>
+                  {catIcon} {pin.categoryLabel}
+                </span>
+                {pin.era && (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center",
+                    padding: "4px 12px", borderRadius: 999, fontSize: 12, fontWeight: 500,
+                    background: "rgba(255,255,255,0.06)", color: "var(--muted)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}>
+                    📅 {pin.era}
+                  </span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h2 style={{ fontSize: "clamp(20px, 3vw, 28px)", fontWeight: 700, color: "#fff", lineHeight: 1.3, marginBottom: 16, flexShrink: 0 }}>
+                {pin.title}
+              </h2>
+
+              {/* Address */}
+              {pin.address && (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16, fontSize: 14, color: "var(--muted)", flexShrink: 0 }}>
+                  <MapPin size={15} style={{ marginTop: 2, flexShrink: 0, color }} />
+                  <span>{pin.address}</span>
+                </div>
+              )}
+
+              <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 16, flexShrink: 0 }} />
+
+              {/* Full description only — no summary */}
+              <div style={{ flex: 1, minHeight: 0, marginBottom: 24 }}>
+                <h3 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color, marginBottom: 12 }}>
+                  Tarihçe & Açıklama
+                </h3>
+                <p style={{ fontSize: 14, color: "#d4d4d4", lineHeight: 1.8, whiteSpace: "pre-line" }}>
+                  {pin.description || pin.fullHistory || pin.summary}
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 16, flexShrink: 0 }}>
+                <button
+                  onClick={handleDirections}
+                  style={{
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: 8, padding: "12px 20px", borderRadius: 12, fontWeight: 600,
+                    fontSize: 14, border: "none", cursor: "pointer",
+                    background: color, color: "#0d0e12",
+                  }}
+                  id={`landmark-directions-${pin.id}`}
+                >
+                  <Navigation size={15} /> Yol Tarifi
+                </button>
+                <button
+                  onClick={handleShare}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    gap: 8, padding: "12px 20px", borderRadius: 12, fontWeight: 500,
+                    fontSize: 14, cursor: "pointer",
+                    background: "transparent", color: "var(--muted)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                  }}
+                  id={`landmark-share-${pin.id}`}
+                >
+                  <Share2 size={15} /> Paylaş
+                </button>
+              </div>
+
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontFamily: "monospace", flexShrink: 0 }}>
+                📍 {pin.coordinates[0].toFixed(5)}°N &nbsp; {pin.coordinates[1].toFixed(5)}°E
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </>,
     document.body

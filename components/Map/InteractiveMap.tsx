@@ -115,8 +115,9 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         zoom: 14,
         minZoom: 10.5,
         maxZoom: 19,
-        zoomControl: false, // hide default zoom on mobile, use pinch
+        zoomControl: false,
         attributionControl: false,
+        preferCanvas: true, // Better mobile performance, avoids SVG rendering gaps
       });
 
       const activeConfig = TILE_LAYERS.find((t) => t.id === selectedTileId) || TILE_LAYERS[0];
@@ -124,6 +125,9 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
         maxZoom: activeConfig.maxZoom,
         subdomains: activeConfig.subdomains,
         attribution: "&copy; CartoDB & Esri & OpenStreetMap",
+        updateWhenIdle: false,      // Load tiles immediately on pan
+        updateWhenZooming: false,   // Don't wait for zoom end
+        keepBuffer: 4,              // Keep more tiles in buffer
       }).addTo(map);
 
       currentTileLayerRef.current = tileLayer;
@@ -135,11 +139,15 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
 
       leafletMapRef.current = map;
       setMapReady(true);
-      setTimeout(() => {
-        if (leafletMapRef.current) {
-          leafletMapRef.current.invalidateSize();
-        }
-      }, 300);
+
+      // Multiple invalidateSize calls to handle mobile layout timing
+      [300, 600, 1200].forEach(ms =>
+        setTimeout(() => {
+          if (leafletMapRef.current) {
+            leafletMapRef.current.invalidateSize({ animate: false });
+          }
+        }, ms)
+      );
     });
 
     return () => {
