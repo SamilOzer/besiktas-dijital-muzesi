@@ -289,15 +289,8 @@ export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
           images: Array.isArray(item.images) ? item.images : [],
         })) as HistoricalEvent[];
 
-        const mergedList = [...dbOlaylar];
-        localList.forEach((lo) => {
-          if (!mergedList.some((doItem) => doItem.id === lo.id)) {
-            mergedList.push(lo);
-          }
-        });
-        
-        saveLocalOlaylar(mergedList);
-        return mergedList;
+        saveLocalOlaylar(dbOlaylar);
+        return dbOlaylar;
       }
     } catch (e) {
       console.warn('Network error fetching olaylar, falling back to local storage:', e);

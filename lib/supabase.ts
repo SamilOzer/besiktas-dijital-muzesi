@@ -16,7 +16,15 @@ export const supabase = isSupabaseConfigured
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-      }
+      },
+      global: {
+        fetch: (url, options) => {
+          return fetch(url, {
+            ...options,
+            cache: 'no-store',
+          });
+        },
+      },
     })
   : null;
 
