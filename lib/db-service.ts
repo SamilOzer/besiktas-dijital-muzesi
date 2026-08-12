@@ -172,6 +172,18 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
           images: Array.isArray(item.images) ? item.images : []
         })) as PinLocation[];
         
+        // Auto-sync any locally created pins that didn't reach Supabase yet
+        const localOnlyPins = localList.filter((lp) => !dbPins.some((dp) => dp.id === lp.id));
+        if (localOnlyPins.length > 0) {
+          console.log('[db-service] Found', localOnlyPins.length, 'local-only pins. Auto-syncing to Supabase...');
+          localOnlyPins.forEach((lp) => {
+            savePinToDb(lp).catch((err) => console.warn('[db-service] Failed to auto-sync local pin:', err));
+          });
+          const combined = [...dbPins, ...localOnlyPins];
+          saveLocalMekanlar(combined);
+          return combined.map(normalizePinData);
+        }
+
         console.log('[db-service] Returning', dbPins.length, 'pins directly from Supabase');
         saveLocalMekanlar(dbPins);
         return dbPins.map(normalizePinData);
@@ -288,6 +300,17 @@ export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
           tags: Array.isArray(item.tags) ? item.tags : [],
           images: Array.isArray(item.images) ? item.images : [],
         })) as HistoricalEvent[];
+
+        const localOnlyOlaylar = localList.filter((lo) => !dbOlaylar.some((doItem) => doItem.id === lo.id));
+        if (localOnlyOlaylar.length > 0) {
+          console.log('[db-service] Found', localOnlyOlaylar.length, 'local-only olaylar. Auto-syncing to Supabase...');
+          localOnlyOlaylar.forEach((lo) => {
+            saveOlayToDb(lo).catch((err) => console.warn('[db-service] Failed to auto-sync local olay:', err));
+          });
+          const combined = [...dbOlaylar, ...localOnlyOlaylar];
+          saveLocalOlaylar(combined);
+          return combined;
+        }
 
         saveLocalOlaylar(dbOlaylar);
         return dbOlaylar;
