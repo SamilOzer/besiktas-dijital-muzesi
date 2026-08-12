@@ -41,14 +41,17 @@ export const normalizePinData = (pin: PinLocation): PinLocation => {
   else if (cat.includes("tarihi") || cat.includes("yapi") || cat.includes("yapı") || cat.includes("ev") || cat.includes("konut") || cat.includes("kültür") || cat.includes("kulturel") || cat.includes("diger") || cat.includes("diğer")) cat = "tarihi-yapilar";
   else if (!VALID_CATEGORIES.includes(cat)) cat = "tarihi-yapilar";
 
+  const VALID_PERIODS = ["1400-1600", "1600-1800", "1800-1850", "1850-1900", "1900-1960", "1960-gunumuz"];
   let period = (pin.timePeriod || "").trim();
-  if (period.includes("osmanlı") || period.includes("klasik")) period = "1400-1600";
-  else if (period.includes("orta")) period = "1600-1800";
-  else if (period.includes("tanzimat") && !period.includes("hamidiye")) period = "1800-1850";
-  else if (period.includes("hamidiye")) period = "1850-1900";
-  else if (period.includes("cumhuriyet") || period.includes("meşrutiyet")) period = "1900-1960";
-  else if (period.includes("günümüz") || period.includes("gunumuz") || period.includes("1960")) period = "1960-gunumuz";
-  else if (!["1400-1600","1600-1800","1800-1850","1850-1900","1900-1960","1960-gunumuz"].includes(period)) period = "1900-1960";
+  if (!VALID_PERIODS.includes(period)) {
+    if (period.includes("osmanlı") || period.includes("klasik")) period = "1400-1600";
+    else if (period.includes("orta")) period = "1600-1800";
+    else if (period.includes("tanzimat") && !period.includes("hamidiye")) period = "1800-1850";
+    else if (period.includes("hamidiye")) period = "1850-1900";
+    else if (period.includes("cumhuriyet") || period.includes("meşrutiyet") || period.includes("1900")) period = "1900-1960";
+    else if (period.includes("günümüz") || period.includes("gunumuz")) period = "1960-gunumuz";
+    else period = "1900-1960";
+  }
 
   return {
     ...pin,
