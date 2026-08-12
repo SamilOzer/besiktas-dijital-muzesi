@@ -59,22 +59,50 @@ export default function ImageUploadInput({
 }: ImageUploadInputProps) {
   const [urlInput, setUrlInput] = useState("");
   const [tab, setTab] = useState<"file" | "url">("file");
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    await processFiles(Array.from(files));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
-    const fileList = Array.from(files);
+  const processFiles = async (fileList: File[]) => {
     try {
       const compressedImages = await Promise.all(fileList.map((file) => compressImage(file)));
       const validNewImages = compressedImages.filter(Boolean);
       onChange([...images, ...validNewImages]);
     } catch (err) {
       console.error("Image compression error:", err);
-    } finally {
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    if (files.length > 0) {
+      await processFiles(files);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   const handleAddUrl = () => {
@@ -128,15 +156,21 @@ export default function ImageUploadInput({
       {tab === "file" ? (
         <div
           onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
           className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 ${
-            darkStyle
+            isDragging
+              ? "border-[var(--accent)] bg-[var(--accent)]/10 scale-[1.01]"
+              : darkStyle
               ? "border-white/15 hover:border-[var(--accent)]/50 bg-white/3 hover:bg-white/5"
               : "border-[var(--a-border)] hover:border-[var(--a-primary)] bg-[var(--a-bg)]"
           }`}
         >
-          <Upload className={`w-6 h-6 ${darkStyle ? "text-[var(--accent)]" : "text-[var(--a-primary)]"}`} />
+          <Upload className={`w-6 h-6 ${isDragging ? "text-[var(--accent)] scale-110" : darkStyle ? "text-[var(--accent)]" : "text-[var(--a-primary)]"} transition-transform`} />
           <p className={`text-xs font-medium ${darkStyle ? "text-white/80" : "text-[var(--a-text)]"}`}>
-            Fotoğraf seçmek için tıklayın veya dosyaları sürükleyin
+            {isDragging ? "Bırakın!" : "Fotoğraf seçmek için tıklayın veya dosyaları sürükleyin"}
           </p>
           <p className="text-[10px] opacity-60">PNG, JPG, WEBP (Birden fazla dosya seçilebilir)</p>
           <input

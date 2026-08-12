@@ -447,7 +447,12 @@ export default function AnsiklopediPage() {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} style={{ borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
                 İptal
               </Button>
-              <Button type="submit" style={{ backgroundColor: 'var(--a-primary)', color: 'var(--a-bg)' }} className="px-6 font-semibold shadow-md">
+              <Button
+                type="button"
+                onClick={handleSubmit(onSubmit, onInvalid)}
+                style={{ backgroundColor: 'var(--a-primary)', color: 'var(--a-bg)' }}
+                className="px-6 font-semibold shadow-md"
+              >
                 Kaydet
               </Button>
             </DialogFooter>

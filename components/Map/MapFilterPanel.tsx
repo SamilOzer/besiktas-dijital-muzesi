@@ -17,6 +17,7 @@ const TIME_PERIOD_COLORS: Record<string, string> = {
   "1800-1850": "#4a9ead",
   "1850-1900": "#5a9a6b",
   "1900-1960": "#e85d3a",
+  "1960-gunumuz": "#3a7de8",
 };
 
 interface MapFilterPanelProps {
@@ -202,14 +203,14 @@ export default function MapFilterPanel({
           {/* Timeline visual */}
           <div className="mt-4 px-1">
             <div className="relative h-1.5 rounded-full bg-white/8 overflow-hidden">
-              {(["1400-1600","1600-1800","1800-1850","1850-1900","1900-1960"] as const).map(
+              {(["1400-1600","1600-1800","1800-1850","1850-1900","1900-1960","1960-gunumuz"] as const).map(
                 (period, i) => (
                   <div
                     key={period}
                     className="absolute top-0 h-full transition-opacity duration-200"
                     style={{
-                      left: `${i * 20}%`,
-                      width: "20%",
+                      left: `${i * (100/6)}%`,
+                      width: `${100/6}%`,
                       background: TIME_PERIOD_COLORS[period],
                       opacity: selectedTimePeriod === "all" || selectedTimePeriod === period ? 1 : 0.2,
                     }}
@@ -223,6 +224,7 @@ export default function MapFilterPanel({
               <span>1800</span>
               <span>1900</span>
               <span>1960</span>
+              <span>Günümüz</span>
             </div>
           </div>
         </Section>

@@ -10,7 +10,8 @@ export type TimePeriod =
   | "1600-1800"
   | "1800-1850"
   | "1850-1900"
-  | "1900-1960";
+  | "1900-1960"
+  | "1960-gunumuz";
 
 export type Neighborhood =
   | "Abbasağa"
@@ -54,12 +55,13 @@ export interface PinLocation {
 }
 
 export const TIME_PERIODS: { id: TimePeriod | "all"; label: string; range: string }[] = [
-  { id: "all",       label: "Tüm Dönemler",     range: "" },
-  { id: "1400-1600", label: "Osmanlı Klasik",    range: "1400 – 1600" },
-  { id: "1600-1800", label: "Osmanlı Orta",      range: "1600 – 1800" },
-  { id: "1800-1850", label: "Erken Tanzimat",    range: "1800 – 1850" },
-  { id: "1850-1900", label: "Tanzimat & Hamidiye", range: "1850 – 1900" },
-  { id: "1900-1960", label: "Meşrutiyet & Cumhuriyet", range: "1900 – 1960" },
+  { id: "all",           label: "Tüm Dönemler",             range: "" },
+  { id: "1400-1600",     label: "Osmanlı Klasik",           range: "1400 – 1600" },
+  { id: "1600-1800",     label: "Osmanlı Orta",             range: "1600 – 1800" },
+  { id: "1800-1850",     label: "Erken Tanzimat",           range: "1800 – 1850" },
+  { id: "1850-1900",     label: "Tanzimat & Hamidiye",      range: "1850 – 1900" },
+  { id: "1900-1960",     label: "Meşrutiyet & Cumhuriyet",  range: "1900 – 1960" },
+  { id: "1960-gunumuz",  label: "Günümüz",                  range: "1960 – Günümüz" },
 ];
 
 export const NEIGHBORHOODS: { id: Neighborhood | "all"; label: string }[] = [

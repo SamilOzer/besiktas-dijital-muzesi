@@ -29,7 +29,7 @@ const mekanSchema = z.object({
   category: z.enum(['heykeller','saraylar','tarihi-yapilar','spor','dini-kamusal'], {
     errorMap: () => ({ message: 'Geçerli bir kategori seçiniz' })
   }),
-  timePeriod: z.enum(['1400-1600','1600-1800','1800-1850','1850-1900','1900-1960'], {
+  timePeriod: z.enum(['1400-1600','1600-1800','1800-1850','1850-1900','1900-1960','1960-gunumuz'], {
     errorMap: () => ({ message: 'Geçerli bir dönem seçiniz' })
   }),
   neighborhood: z.enum(['Abbasağa','Akatlar','Arnavutköy','Balmumcu','Bebek','Cihannüma','Dikilitaş','Etiler','Gayrettepe','Konaklar','Kuruçeşme','Kültür','Levazım','Levent','Mecidiye','Muradiye','Nisbetiye','Ortaköy','Sinanpaşa','Türkali','Ulus','Vişnezade','Yıldız'], {
@@ -279,6 +279,7 @@ export default function MekanlarPage() {
               <option value="1800-1850">1800-1850</option>
               <option value="1850-1900">1850-1900</option>
               <option value="1900-1960">1900-1960</option>
+              <option value="1960-gunumuz">1960-Günümüz</option>
             </select>
           </div>
 
@@ -384,6 +385,7 @@ export default function MekanlarPage() {
                               <SelectItem value="1800-1850">1800-1850</SelectItem>
                               <SelectItem value="1850-1900">1850-1900</SelectItem>
                               <SelectItem value="1900-1960">1900-1960</SelectItem>
+                              <SelectItem value="1960-gunumuz">1960-Günümüz</SelectItem>
                             </SelectContent>
                           </Select>
                         )}
@@ -544,7 +546,12 @@ export default function MekanlarPage() {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} style={{ borderColor: 'var(--a-border)', color: 'var(--a-text)' }}>
                 İptal
               </Button>
-              <Button type="submit" style={{ backgroundColor: 'var(--a-primary)', color: 'var(--a-bg)' }} className="px-6 font-semibold shadow-md">
+              <Button
+                type="button"
+                onClick={handleSubmit(onSubmit, onInvalid)}
+                style={{ backgroundColor: 'var(--a-primary)', color: 'var(--a-bg)' }}
+                className="px-6 font-semibold shadow-md"
+              >
                 Kaydet
               </Button>
             </DialogFooter>
