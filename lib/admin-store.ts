@@ -147,7 +147,7 @@ export const fetchMekanlar = async (): Promise<PinLocation[]> => {
   return getMekanlar();
 };
 
-export const addMekan = (item: PinLocation) => {
+export const addMekan = async (item: PinLocation) => {
   const normalized = normalizePinData(item);
   console.log("[admin-store] addMekan called:", normalized.id, normalized.title, normalized.category, normalized.coordinates);
   
@@ -161,11 +161,15 @@ export const addMekan = (item: PinLocation) => {
   mekanlar = updated;
   updateCategoryStats();
   
-  // 4. CRITICAL: Save ENTIRE updated list to localStorage SYNCHRONOUSLY
+  // 4. Save to localStorage
   directSaveToLocalStorage(updated);
   
-  // 5. Async Supabase sync (fire-and-forget, localStorage is already safe)
-  savePinToDb(normalized).catch((err: any) => console.error("Error saving pin to Supabase:", err));
+  // 5. Await Supabase DB save to guarantee cross-device sync
+  try {
+    await savePinToDb(normalized);
+  } catch (err) {
+    console.error("Error saving pin to Supabase:", err);
+  }
   
   // 6. Notify other components/tabs
   notifyDataUpdated();
@@ -174,18 +178,21 @@ export const addMekan = (item: PinLocation) => {
   return normalized;
 };
 
-export const updateMekan = (id: string, updates: Partial<PinLocation>) => {
+export const updateMekan = async (id: string, updates: Partial<PinLocation>) => {
   const current = getMekanlar();
   const updatedList = current.map((m) => (m.id === id ? normalizePinData({ ...m, ...updates }) : m));
   mekanlar = updatedList;
   updateCategoryStats();
   
-  // CRITICAL: Save ENTIRE updated list to localStorage SYNCHRONOUSLY
   directSaveToLocalStorage(updatedList);
   
   const updatedItem = mekanlar.find((m) => m.id === id) ?? null;
   if (updatedItem) {
-    savePinToDb(updatedItem).catch((err: any) => console.error("Error updating pin in Supabase:", err));
+    try {
+      await savePinToDb(updatedItem);
+    } catch (err) {
+      console.error("Error updating pin in Supabase:", err);
+    }
   }
   notifyDataUpdated();
   return updatedItem;

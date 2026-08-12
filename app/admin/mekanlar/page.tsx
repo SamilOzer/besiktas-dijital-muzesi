@@ -25,7 +25,7 @@ import dynamic from 'next/dynamic';
 const LocationPickerModal = dynamic(() => import('@/components/admin/LocationPickerModal'), { ssr: false });
 
 const mekanSchema = z.object({
-  title: z.string().trim().min(2, 'Mekân adı en az 2 karakter olmalıdır'),
+  title: z.string().trim().min(1, 'Mekân adı zorunludur'),
   category: z.enum(['heykeller','saraylar','tarihi-yapilar','spor','dini-kamusal'], {
     errorMap: () => ({ message: 'Geçerli bir kategori seçiniz' })
   }),
@@ -35,17 +35,13 @@ const mekanSchema = z.object({
   neighborhood: z.enum(['Abbasağa','Akatlar','Arnavutköy','Balmumcu','Bebek','Cihannüma','Dikilitaş','Etiler','Gayrettepe','Konaklar','Kuruçeşme','Kültür','Levazım','Levent','Mecidiye','Muradiye','Nisbetiye','Ortaköy','Sinanpaşa','Türkali','Ulus','Vişnezade','Yıldız'], {
     errorMap: () => ({ message: 'Geçerli bir mahalle seçiniz' })
   }),
-  address: z.string().trim().min(1, 'Açık adres girilmesi zorunludur'),
+  address: z.string().optional().default(''),
   summary: z.string().optional().default(''),
-  description: z.string().optional(),
-  era: z.string().optional(),
-  lat: z.coerce.number({ invalid_type_error: 'Geçerli bir enlem (lat) koordinatı giriniz' })
-    .min(36, 'Enlem Türkiye sınırları (36-42) arasında olmalıdır')
-    .max(43, 'Enlem Türkiye sınırları (36-42) arasında olmalıdır'),
-  lng: z.coerce.number({ invalid_type_error: 'Geçerli bir boylam (lng) koordinatı giriniz' })
-    .min(25, 'Boylam Türkiye sınırları (25-45) arasında olmalıdır')
-    .max(45, 'Boylam Türkiye sınırları (25-45) arasında olmalıdır'),
-  images: z.array(z.string()).optional(),
+  description: z.string().optional().default(''),
+  era: z.string().optional().default(''),
+  lat: z.coerce.number().optional().default(41.0425),
+  lng: z.coerce.number().optional().default(29.0075),
+  images: z.array(z.string()).optional().default([]),
 });
 type MekanFormData = z.input<typeof mekanSchema>;
 
@@ -155,7 +151,7 @@ export default function MekanlarPage() {
     setDialogOpen(true);
   };
 
-  const onSubmit = (data: MekanFormData) => {
+  const onSubmit = async (data: MekanFormData) => {
     const categoryLabels: Record<string, string> = {
       heykeller: 'Heykeller & Anıtlar',
       saraylar: 'Saraylar & Kasırlar',
@@ -167,8 +163,8 @@ export default function MekanlarPage() {
     const descriptionText = data.description || data.summary || '';
 
     // Ensure pin doesn't overlap exactly with an existing pin
-    let targetLat = data.lat;
-    let targetLng = data.lng;
+    let targetLat = data.lat ?? 41.0425;
+    let targetLng = data.lng ?? 29.0075;
     const existingMekanlar = mekanlar.filter(m => m.id !== editingId);
     let attempts = 0;
     while (existingMekanlar.some(m => Math.abs(m.coordinates[0] - targetLat) < 0.0001 && Math.abs(m.coordinates[1] - targetLng) < 0.0001) && attempts < 10) {
@@ -180,7 +176,7 @@ export default function MekanlarPage() {
     const finalCoordinates: [number, number] = [targetLat, targetLng];
 
     if (editingId) {
-      updateMekan(editingId, {
+      await updateMekan(editingId, {
         ...data,
         categoryLabel: categoryLabels[data.category],
         fullHistory: descriptionText,
@@ -190,7 +186,7 @@ export default function MekanlarPage() {
         images: data.images?.filter(img => img.trim() !== '') || [],
       });
     } else {
-      addMekan({
+      await addMekan({
         id: Date.now().toString(),
         ...data,
         categoryLabel: categoryLabels[data.category],
@@ -201,7 +197,8 @@ export default function MekanlarPage() {
         images: data.images?.filter(img => img.trim() !== '') || [],
       });
     }
-    setMekanlar(getMekanlar());
+    const freshData = await fetchMekanlar();
+    setMekanlar(freshData);
     setDialogOpen(false);
   };
 
