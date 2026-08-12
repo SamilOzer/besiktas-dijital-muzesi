@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import LandmarkModal from "@/components/Map/LandmarkModal";
 import MapFilterPanel from "@/components/Map/MapFilterPanel";
 import { PinLocation, besiktasPinData } from "@/data/besiktasPinData";
-import { normalizePinData } from "@/lib/db-service";
+import { normalizePinData, fetchPinsFromDb } from "@/lib/db-service";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 // Leaflet must be client-only
