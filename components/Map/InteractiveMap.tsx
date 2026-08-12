@@ -208,6 +208,16 @@ export default function InteractiveMap({ pins, onPinClick }: InteractiveMapProps
     const showEmoji = true;
 
     pins.forEach((pin) => {
+      if (
+        !pin ||
+        !Array.isArray(pin.coordinates) ||
+        pin.coordinates.length < 2 ||
+        isNaN(Number(pin.coordinates[0])) ||
+        isNaN(Number(pin.coordinates[1]))
+      ) {
+        return;
+      }
+
       const color = CATEGORY_COLORS[pin.category] ?? "#c5a059";
       const icon = CATEGORY_ICONS[pin.category] ?? "📍";
 

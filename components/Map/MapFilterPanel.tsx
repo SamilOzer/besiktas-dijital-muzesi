@@ -131,7 +131,7 @@ export default function MapFilterPanel({
       <div className="flex-1 overflow-y-auto">
 
         {/* 1. Kategori */}
-        <Section title="Kategori" icon={<Layers size={12} />} defaultOpen={false}>
+        <Section title="Kategori" icon={<Layers size={12} />} defaultOpen={true}>
           <div className="flex flex-col gap-1">
             {CATEGORIES.map(({ id, label, emoji }) => (
               <button

@@ -34,17 +34,37 @@ function loadAllPins(): PinLocation[] {
     console.warn("[harita] Failed to read localStorage:", e);
   }
 
-  // Merge: start with localStorage, guarantee all besiktasPinData defaults exist
-  const merged = [...stored];
+  const pinMap = new Map<string, PinLocation>();
+
+  // 1. Always seed with latest default pins from besiktasPinData
   besiktasPinData.forEach((bp) => {
-    if (!merged.some((p) => p.id === bp.id)) {
-      merged.push(bp);
+    pinMap.set(bp.id, normalizePinData(bp));
+  });
+
+  // 2. Merge stored pins from localStorage (user/admin added or modified pins)
+  stored.forEach((sp) => {
+    if (sp && sp.id) {
+      const defaultPin = pinMap.get(sp.id);
+      if (defaultPin) {
+        pinMap.set(sp.id, normalizePinData({ ...defaultPin, ...sp }));
+      } else {
+        pinMap.set(sp.id, normalizePinData(sp));
+      }
     }
   });
 
-  const result = merged.map(normalizePinData);
-  console.log(`[harita] loadAllPins: ${stored.length} from localStorage + defaults → ${result.length} total`);
-  result.forEach((p, i) => console.log(`  ${i + 1}. [${p.id}] "${p.title}" coords=[${p.coordinates}]`));
+  const result = Array.from(pinMap.values());
+
+  // Auto-refresh client localStorage with normalized pins
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
+    }
+  } catch (err) {
+    console.warn("[harita] Failed to sync localStorage:", err);
+  }
+
+  console.log(`[harita] loadAllPins: ${result.length} pins loaded and normalized.`);
   return result;
 }
 
@@ -88,22 +108,42 @@ export default function HaritaPage() {
 
   const filteredPins = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const result = pins.filter((pin) => {
-      const catOk   = selectedCategory    === "all" || pin.category    === selectedCategory;
-      const timeOk  = selectedTimePeriod  === "all" || pin.timePeriod  === selectedTimePeriod;
-      const neighOk = selectedNeighborhood=== "all" || pin.neighborhood=== selectedNeighborhood;
+    return pins.filter((pin) => {
+      const catOk =
+        selectedCategory === "all" ||
+        pin.category === selectedCategory ||
+        (pin.category || "").toLowerCase() === selectedCategory.toLowerCase();
+
+      const timeOk =
+        selectedTimePeriod === "all" ||
+        pin.timePeriod === selectedTimePeriod;
+
+      const neighOk =
+        selectedNeighborhood === "all" ||
+        pin.neighborhood === selectedNeighborhood;
+
+      const titleText   = (pin.title || "").toLowerCase();
+      const addressText = (pin.address || "").toLowerCase();
+      const summaryText = (pin.summary || "").toLowerCase();
+      const descText    = (pin.description || "").toLowerCase();
+      const historyText = (pin.fullHistory || "").toLowerCase();
+      const neighText   = (pin.neighborhood || "").toLowerCase();
+      const eraText     = (pin.era || "").toLowerCase();
+      const catText     = (pin.categoryLabel || "").toLowerCase();
+
       const searchOk =
         !q ||
-        pin.title.toLowerCase().includes(q) ||
-        (pin.address || "").toLowerCase().includes(q) ||
-        (pin.summary || "").toLowerCase().includes(q);
+        titleText.includes(q) ||
+        addressText.includes(q) ||
+        summaryText.includes(q) ||
+        descText.includes(q) ||
+        historyText.includes(q) ||
+        neighText.includes(q) ||
+        eraText.includes(q) ||
+        catText.includes(q);
 
       return catOk && timeOk && neighOk && searchOk;
     });
-    if (result.length !== pins.length) {
-      console.log(`[harita] Filtered: ${pins.length} → ${result.length} pins (cat=${selectedCategory}, time=${selectedTimePeriod}, neigh=${selectedNeighborhood}, q=${q})`);
-    }
-    return result;
   }, [selectedCategory, selectedTimePeriod, selectedNeighborhood, searchQuery, pins]);
 
   const handleReset = () => {
