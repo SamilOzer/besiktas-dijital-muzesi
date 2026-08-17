@@ -1,265 +1,322 @@
-import { useState } from "react";
-import { ChevronDown, ChevronUp, RotateCcw, Layers, Clock, MapPin, Search } from "lucide-react";
-import { TIME_PERIODS, NEIGHBORHOODS } from "@/data/besiktasPinData";
+"use client";
 
-const CATEGORIES = [
-  { id: "all",           label: "Tümü",                    emoji: "🗺️" },
-  { id: "heykeller",     label: "Heykeller & Anıtlar",     emoji: "🗿" },
-  { id: "saraylar",      label: "Saraylar & Kasırlar",     emoji: "🏰" },
-  { id: "tarihi-yapilar",label: "Tarihi Evler & Yapılar",  emoji: "🏛️" },
-  { id: "spor",          label: "Stadyum & Spor Tarihi",   emoji: "🏟️" },
-  { id: "dini-kamusal",  label: "Dini & Kamusal Yapılar",  emoji: "⛪" },
+import Image from "next/image";
+import { useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Building2,
+  Castle,
+  ChevronDown,
+  Church,
+  Clock3,
+  Landmark,
+  Layers3,
+  Map,
+  MapPin,
+  RotateCcw,
+  Search,
+  Trophy,
+} from "lucide-react";
+import { NEIGHBORHOODS, PinLocation, TIME_PERIODS } from "@/data/besiktasPinData";
+import { FEATURED_MAP_PIN_ORDER, getMapImage } from "@/lib/map-images";
+import { MAP_CATEGORY_COLORS } from "@/lib/map-theme";
+
+const CATEGORIES: Array<{ id: string; label: string; icon: LucideIcon; color: string }> = [
+  { id: "all", label: "Tümü", icon: Map, color: "#c6a25c" },
+  { id: "heykeller", label: "Heykeller", icon: Landmark, color: MAP_CATEGORY_COLORS.heykeller },
+  { id: "saraylar", label: "Saraylar", icon: Castle, color: MAP_CATEGORY_COLORS.saraylar },
+  { id: "tarihi-yapilar", label: "Tarihi Yapılar", icon: Building2, color: MAP_CATEGORY_COLORS["tarihi-yapilar"] },
+  { id: "spor", label: "Stadyum & Spor", icon: Trophy, color: MAP_CATEGORY_COLORS.spor },
+  { id: "dini-kamusal", label: "Dini & Kamusal", icon: Church, color: MAP_CATEGORY_COLORS["dini-kamusal"] },
 ];
 
 const TIME_PERIOD_COLORS: Record<string, string> = {
-  "1400-1600": "#c5a059",
-  "1600-1800": "#9b6fd0",
-  "1800-1850": "#4a9ead",
-  "1850-1900": "#5a9a6b",
-  "1900-1960": "#e85d3a",
-  "1960-gunumuz": "#3a7de8",
+  "1400-1600": "#c6a25c",
+  "1600-1800": "#8065a8",
+  "1800-1850": "#467ca4",
+  "1850-1900": "#4f8b7e",
+  "1900-1960": "#b85e48",
 };
 
 interface MapFilterPanelProps {
+  searchQuery: string;
   selectedCategory: string;
   selectedTimePeriod: string;
   selectedNeighborhood: string;
-  searchQuery: string;
   resultCount: number;
-  totalCount: number;
-  onCategoryChange: (v: string) => void;
-  onTimePeriodChange: (v: string) => void;
-  onNeighborhoodChange: (v: string) => void;
-  onSearchChange: (v: string) => void;
+  pins: PinLocation[];
+  selectedPinId: string | null;
+  onSearchChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
+  onTimePeriodChange: (value: string) => void;
+  onNeighborhoodChange: (value: string) => void;
+  onPinSelect: (pin: PinLocation) => void;
   onReset: () => void;
 }
 
-function Section({
+function FilterSection({
   title,
-  icon,
+  icon: Icon,
+  activeLabel,
   children,
-  defaultOpen = true,
 }: {
   title: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
+  activeLabel: string;
   children: React.ReactNode;
-  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="border-b border-white/8 last:border-0">
+    <div className="border-b border-white/10">
       <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/4 transition-colors"
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors hover:bg-white/5"
         aria-expanded={open}
       >
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
-          {icon}
-          {title}
-        </div>
-        {open ? <ChevronUp size={14} className="text-[var(--muted)]" /> : <ChevronDown size={14} className="text-[var(--muted)]" />}
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[var(--accent)]">
+            <Icon size={15} strokeWidth={1.8} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">
+              {title}
+            </span>
+            <span className="mt-0.5 block truncate text-[13px] font-medium text-white/85">
+              {activeLabel}
+            </span>
+          </span>
+        </span>
+        <ChevronDown
+          size={15}
+          className={`shrink-0 text-white/35 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
       </button>
-      {open && <div className="px-4 pb-4">{children}</div>}
+      {open && <div className="px-5 pb-4">{children}</div>}
     </div>
   );
 }
 
 export default function MapFilterPanel({
+  searchQuery,
   selectedCategory,
   selectedTimePeriod,
   selectedNeighborhood,
-  searchQuery,
   resultCount,
-  totalCount,
+  pins,
+  selectedPinId,
+  onSearchChange,
   onCategoryChange,
   onTimePeriodChange,
   onNeighborhoodChange,
-  onSearchChange,
+  onPinSelect,
   onReset,
 }: MapFilterPanelProps) {
   const hasActiveFilter =
+    searchQuery.length > 0 ||
     selectedCategory !== "all" ||
     selectedTimePeriod !== "all" ||
-    selectedNeighborhood !== "all" ||
-    searchQuery.trim() !== "";
+    selectedNeighborhood !== "all";
+
+  const activeCategory = CATEGORIES.find((item) => item.id === selectedCategory)?.label ?? "Tümü";
+  const activePeriod = TIME_PERIODS.find((item) => item.id === selectedTimePeriod)?.label ?? "Tüm dönemler";
+  const activeNeighborhood =
+    NEIGHBORHOODS.find((item) => item.id === selectedNeighborhood)?.label ?? "Tüm mahalleler";
+  const displayedPins = [...pins].sort((left, right) => {
+    const leftIndex = FEATURED_MAP_PIN_ORDER.indexOf(left.id as (typeof FEATURED_MAP_PIN_ORDER)[number]);
+    const rightIndex = FEATURED_MAP_PIN_ORDER.indexOf(right.id as (typeof FEATURED_MAP_PIN_ORDER)[number]);
+    const leftRank = leftIndex === -1 ? FEATURED_MAP_PIN_ORDER.length : leftIndex;
+    const rightRank = rightIndex === -1 ? FEATURED_MAP_PIN_ORDER.length : rightIndex;
+    return leftRank - rightRank;
+  });
 
   return (
-    <div className="flex flex-col h-full">
-      {/* ─── Panel header ─── */}
-      <div className="px-4 py-4 border-b border-white/10 flex-shrink-0 space-y-3">
-        <div>
-          <h1 className="text-base font-bold text-white leading-tight">
-            Beşiktaş Kültür Haritası
-          </h1>
-          <p className="text-[11px] text-[var(--muted)] mt-0.5">
-            Tarihi mekânları ve pinleri keşfedin
-          </p>
+    <div className="flex h-full min-w-[300px] flex-col text-white">
+      <div className="shrink-0 border-b border-white/10 px-5 pb-5 pt-6">
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">
+          Beşiktaş Atlası
+        </p>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="map-display-title text-[25px] font-semibold leading-[1.08] text-[#f7f2e8]">
+              Kültür Haritası
+            </h1>
+            <p className="mt-2 text-xs leading-relaxed text-white/45">
+              Semtin hafızasını sokak sokak keşfedin.
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <span className="block text-xl font-semibold tabular-nums text-[var(--accent)]">{resultCount}</span>
+            <span className="text-[10px] uppercase tracking-[0.12em] text-white/35">nokta</span>
+          </div>
         </div>
 
-        {/* Search Input */}
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-2.5 text-[var(--muted)]" />
+        <label className="mt-5 flex h-11 items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3.5 transition-colors focus-within:border-[var(--accent)]/55 focus-within:bg-white/[0.07]">
+          <Search size={16} className="shrink-0 text-white/40" strokeWidth={1.8} />
+          <span className="sr-only">Mekân ara</span>
           <input
-            type="text"
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Mekân veya adres ara..."
-            className="w-full pl-9 pr-3 py-1.5 bg-[#12141a] border border-white/15 rounded-lg text-xs text-white placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-all"
-            id="map-search-input"
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Mekân ara"
+            className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"
           />
-        </div>
-
-        {/* Result count + reset */}
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] text-[var(--muted)]">
-            Gösterilen: <span className="text-[var(--accent)] font-bold text-sm">{resultCount}</span> / {totalCount} mekân
-          </span>
           {hasActiveFilter && (
             <button
+              type="button"
               onClick={onReset}
-              className="flex items-center gap-1 text-[11px] text-[var(--accent)] hover:text-white transition-colors px-2 py-1 rounded-lg bg-[var(--accent)]/15 border border-[var(--accent)]/30 font-semibold"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Filtreleri sıfırla"
+              title="Filtreleri sıfırla"
               id="filter-reset"
             >
-              <RotateCcw size={11} />
-              Filtreleri Sıfırla
+              <RotateCcw size={13} />
             </button>
           )}
-        </div>
+        </label>
       </div>
 
-      {/* ─── Scrollable filter area ─── */}
-      <div className="flex-1 overflow-y-auto">
-
-        {/* 1. Kategori */}
-        <Section title="Kategori" icon={<Layers size={12} />} defaultOpen={true}>
-          <div className="flex flex-col gap-1">
-            {CATEGORIES.map(({ id, label, emoji }) => (
-              <button
-                key={id}
-                id={`cat-${id}`}
-                onClick={() => onCategoryChange(id)}
-                className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-left transition-all ${
-                  selectedCategory === id
-                    ? "bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30 font-semibold"
-                    : "text-[var(--muted)] hover:bg-white/5 hover:text-white border border-transparent"
-                }`}
-              >
-                <span className="text-sm">{emoji}</span>
-                {label}
-              </button>
-            ))}
-          </div>
-        </Section>
-
-        {/* 2. Dönem / Time Period */}
-        <Section title="Tarihi Dönem" icon={<Clock size={12} />} defaultOpen={false}>
-          <div className="flex flex-col gap-1">
-            {TIME_PERIODS.map(({ id, label, range }) => {
-              const color = id === "all" ? "#9ca3af" : TIME_PERIOD_COLORS[id] ?? "#c5a059";
-              const isActive = selectedTimePeriod === id;
-              return (
-                <button
-                  key={id}
-                  id={`period-${id}`}
-                  onClick={() => onTimePeriodChange(id)}
-                  className={`flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs text-left transition-all border ${
-                    isActive
-                      ? "font-semibold"
-                      : "border-transparent text-[var(--muted)] hover:bg-white/5 hover:text-white"
-                  }`}
-                  style={
-                    isActive
-                      ? {
-                          background: `${color}18`,
-                          color,
-                          borderColor: `${color}40`,
-                        }
-                      : {}
-                  }
-                >
-                  <div className="flex items-center gap-2">
-                    {id !== "all" && (
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ background: color }}
-                      />
-                    )}
-                    {id === "all" && <span className="w-2 h-2" />}
-                    <span>{label}</span>
-                  </div>
-                  {range && (
-                    <span
-                      className="text-[10px] opacity-70 font-mono tabular-nums"
-                      style={{ color }}
-                    >
-                      {range}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Timeline visual */}
-          <div className="mt-4 px-1">
-            <div className="relative h-1.5 rounded-full bg-white/8 overflow-hidden">
-              {(["1400-1600","1600-1800","1800-1850","1850-1900","1900-1960","1960-gunumuz"] as const).map(
-                (period, i) => (
-                  <div
-                    key={period}
-                    className="absolute top-0 h-full transition-opacity duration-200"
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="border-b border-white/10">
+          <FilterSection title="Kategori" icon={Layers3} activeLabel={activeCategory}>
+            <div className="grid grid-cols-2 gap-1.5">
+              {CATEGORIES.map(({ id, label, icon: Icon, color }) => {
+                const active = selectedCategory === id;
+                return (
+                  <button
+                    type="button"
+                    key={id}
+                    id={`cat-${id}`}
+                    onClick={() => onCategoryChange(id)}
+                    className="flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[11px] transition-colors"
                     style={{
-                      left: `${i * (100/6)}%`,
-                      width: `${100/6}%`,
-                      background: TIME_PERIOD_COLORS[period],
-                      opacity: selectedTimePeriod === "all" || selectedTimePeriod === period ? 1 : 0.2,
+                      color: active ? color : "rgba(255,255,255,0.58)",
+                      borderColor: active ? `${color}7a` : "transparent",
+                      background: active ? `${color}1f` : "rgba(255,255,255,0.035)",
                     }}
-                  />
-                )
-              )}
+                  >
+                    <Icon size={13} strokeWidth={1.8} />
+                    <span className="truncate">{label}</span>
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex justify-between mt-1 text-[9px] text-white/30 font-mono">
-              <span>1400</span>
-              <span>1600</span>
-              <span>1800</span>
-              <span>1900</span>
-              <span>1960</span>
-              <span>Günümüz</span>
+          </FilterSection>
+
+          <FilterSection title="Tarihi dönem" icon={Clock3} activeLabel={activePeriod}>
+            <div className="space-y-1">
+              {TIME_PERIODS.map(({ id, label, range }) => {
+                const color = id === "all" ? "#b7bdc6" : TIME_PERIOD_COLORS[id] ?? "#c6a25c";
+                const active = selectedTimePeriod === id;
+                return (
+                  <button
+                    type="button"
+                    key={id}
+                    id={`period-${id}`}
+                    onClick={() => onTimePeriodChange(id)}
+                    className="flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-xs transition-colors"
+                    style={{
+                      background: active ? `${color}18` : "rgba(255,255,255,0.035)",
+                      borderColor: active ? `${color}60` : "transparent",
+                      color: active ? color : "rgba(255,255,255,0.56)",
+                    }}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
+                      {label}
+                    </span>
+                    {range && <span className="text-[10px] opacity-60">{range}</span>}
+                  </button>
+                );
+              })}
             </div>
-          </div>
-        </Section>
+          </FilterSection>
 
-        {/* 3. Mahalle */}
-        <Section title="Mahalle" icon={<MapPin size={12} />} defaultOpen={false}>
-          <div className="flex flex-col gap-1">
-            {NEIGHBORHOODS.map(({ id, label }) => (
-              <button
-                key={id}
-                id={`neigh-${id}`}
-                onClick={() => onNeighborhoodChange(id)}
-                className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-left transition-all ${
-                  selectedNeighborhood === id
-                    ? "bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30 font-semibold"
-                    : "text-[var(--muted)] hover:bg-white/5 hover:text-white border border-transparent"
-                }`}
-              >
-                <span className="text-[10px]">{id === "all" ? "🗺️" : "📍"}</span>
-                {label}
-              </button>
-            ))}
-          </div>
-        </Section>
-      </div>
+          <FilterSection title="Mahalle" icon={MapPin} activeLabel={activeNeighborhood}>
+            <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
+              {NEIGHBORHOODS.map(({ id, label }) => {
+                const active = selectedNeighborhood === id;
+                return (
+                  <button
+                    type="button"
+                    key={id}
+                    id={`neigh-${id}`}
+                    onClick={() => onNeighborhoodChange(id)}
+                    className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+                      active
+                        ? "border-[var(--accent)]/45 bg-[var(--accent)]/15 text-[var(--accent)]"
+                        : "border-transparent bg-white/[0.035] text-white/55 hover:bg-white/[0.07] hover:text-white"
+                    }`}
+                  >
+                    <MapPin size={12} strokeWidth={1.8} />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </FilterSection>
+        </div>
 
-      {/* ─── Panel footer ─── */}
-      <div className="p-3 border-t border-white/10 flex-shrink-0 bg-[#12141a]">
-        <button
-          onClick={onReset}
-          className="w-full py-2.5 px-4 rounded-xl bg-[var(--accent)]/15 border border-[var(--accent)]/30 text-[var(--accent)] hover:bg-[var(--accent)]/25 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
-          id="sidebar-recenter-reset-btn"
-        >
-          <span>📍</span> Filtreleri Sıfırla & Odaklan
-        </button>
+        <section className="px-5 py-5" aria-labelledby="nearby-title">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 id="nearby-title" className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/55">
+              Haritadaki noktalar
+            </h2>
+            <span className="text-[10px] text-white/30">İlk {Math.min(pins.length, 3)}</span>
+          </div>
+
+          {pins.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/15 px-4 py-6 text-center text-xs text-white/40">
+              Bu filtrelerle eşleşen bir mekân bulunamadı.
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {displayedPins.slice(0, 3).map((pin) => {
+                const active = selectedPinId === pin.id;
+                const imageSrc = getMapImage(pin);
+                const pinColor = MAP_CATEGORY_COLORS[pin.category] ?? "#c6a25c";
+                return (
+                  <button
+                    type="button"
+                    key={pin.id}
+                    onClick={() => onPinSelect(pin)}
+                    className="group flex w-full items-center gap-3 rounded-xl border p-2 text-left transition-colors hover:bg-white/5"
+                    style={{
+                      borderColor: active ? `${pinColor}8a` : "transparent",
+                      background: active ? `${pinColor}17` : undefined,
+                    }}
+                  >
+                    <span className="relative h-14 w-[72px] shrink-0 overflow-hidden rounded-lg bg-white/5">
+                      <span className="absolute inset-0 flex items-center justify-center text-white/30">
+                        <Landmark size={20} />
+                      </span>
+                      {imageSrc ? (
+                        <Image
+                          src={imageSrc}
+                          alt={`${pin.title} görünümü`}
+                          fill
+                          unoptimized={imageSrc.startsWith("http")}
+                          sizes="72px"
+                          className="z-10 object-cover transition-transform duration-300 group-hover:scale-105"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : null}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13px] font-semibold text-white/90">{pin.title}</span>
+                      <span className="mt-1 block truncate text-[11px]" style={{ color: pinColor }}>
+                        {pin.categoryLabel}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[10px] text-white/35">{pin.era}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

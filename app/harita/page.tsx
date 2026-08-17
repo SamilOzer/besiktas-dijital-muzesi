@@ -7,7 +7,7 @@ import { PinLocation, besiktasPinData } from "@/data/besiktasPinData";
 import { normalizePinData, fetchPinsFromDb } from "@/lib/db-service";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
-// Leaflet must be client-only
+// MapLibre uses WebGL and must stay client-only.
 const InteractiveMap = dynamic(
   () => import("@/components/Map/InteractiveMap"),
   { ssr: false }
@@ -64,6 +64,7 @@ export default function HaritaPage() {
   const [selectedTimePeriod,  setSelectedTimePeriod]  = useState("all");
   const [selectedNeighborhood,setSelectedNeighborhood]= useState("all");
   const [searchQuery,         setSearchQuery]         = useState("");
+  const [selectedPinId,       setSelectedPinId]       = useState<string | null>("dolmabahce-sarayi");
   const [activePin,           setActivePin]           = useState<PinLocation | null>(null);
   const [sidebarOpen,         setSidebarOpen]         = useState(false); // default closed, opened after mount if desktop
   const [pins,                setPins]                = useState<PinLocation[]>([]);
@@ -149,6 +150,11 @@ export default function HaritaPage() {
     });
   }, [selectedCategory, selectedTimePeriod, selectedNeighborhood, searchQuery, pins]);
 
+  const selectedPin = useMemo(() => {
+    if (!selectedPinId) return null;
+    return filteredPins.find((pin) => pin.id === selectedPinId) ?? filteredPins[0] ?? null;
+  }, [filteredPins, selectedPinId]);
+
   const handleReset = () => {
     setSelectedCategory("all");
     setSelectedTimePeriod("all");
@@ -164,10 +170,8 @@ export default function HaritaPage() {
     >
       {/* ── Sidebar ─────────────────────────────────── */}
       <aside
-        className={`h-full flex flex-col border-r border-white/10 bg-[#14161d]/98 backdrop-blur-md transition-all duration-300 overflow-hidden
-          ${sidebarOpen ? "w-[280px]" : "w-0"}
-          absolute md:relative z-20 md:z-auto`
-        }
+        className="map-sidebar absolute z-20 flex h-full flex-col overflow-hidden border-r border-white/10 bg-[#0b1118] transition-all duration-300 md:relative md:z-auto"
+        style={{ width: sidebarOpen ? "min(88vw, 360px)" : "0px" }}
         aria-label="Filtreler"
       >
         {/* Only render contents when open to avoid layout artifacts */}
@@ -178,11 +182,13 @@ export default function HaritaPage() {
             selectedNeighborhood={selectedNeighborhood}
             searchQuery={searchQuery}
             resultCount={filteredPins.length}
-            totalCount={pins.length}
+            pins={filteredPins}
+            selectedPinId={selectedPin?.id ?? null}
             onCategoryChange={setSelectedCategory}
             onTimePeriodChange={setSelectedTimePeriod}
             onNeighborhoodChange={setSelectedNeighborhood}
             onSearchChange={setSearchQuery}
+            onPinSelect={(pin) => setSelectedPinId(pin.id)}
             onReset={handleReset}
           />
         )}
@@ -199,8 +205,8 @@ export default function HaritaPage() {
       {/* ── Toggle sidebar button ────────────────────── */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute bottom-6 z-30 flex items-center justify-center w-8 h-8 rounded-r-xl bg-[#14161d] border border-l-0 border-white/15 text-[var(--muted)] hover:text-[var(--accent)] hover:border-[var(--accent)]/40 transition-all shadow-lg"
-        style={{ left: sidebarOpen ? "280px" : "0px" }}
+        className="map-sidebar-toggle absolute bottom-6 z-[1300] flex h-10 w-9 items-center justify-center rounded-r-xl border border-l-0 border-white/15 bg-[#0b1118] text-[var(--muted)] shadow-lg transition-all hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
+        style={{ left: sidebarOpen ? "min(88vw, 360px)" : "0px" }}
         id="sidebar-toggle"
         aria-label={sidebarOpen ? "Paneli kapat" : "Paneli aç"}
       >
@@ -211,10 +217,13 @@ export default function HaritaPage() {
       </button>
 
       {/* ── Map ─────────────────────────────────────── */}
-      <div className="flex-1 h-full relative bg-[#0d0e12]">
+      <div className="relative h-full flex-1 bg-[#2aa8c5]">
         <InteractiveMap
           pins={filteredPins}
-          onPinClick={(pin) => setActivePin(pin)}
+          selectedPin={selectedPin}
+          onPinSelect={(pin) => setSelectedPinId(pin.id)}
+          onClearSelection={() => setSelectedPinId(null)}
+          onOpenPin={(pin) => setActivePin(pin)}
         />
       </div>
 
