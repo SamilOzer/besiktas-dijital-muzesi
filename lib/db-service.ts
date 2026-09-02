@@ -94,18 +94,18 @@ const notifyDataChanged = () => {
 };
 
 // Helper to save local data
-const saveLocalMekanlar = (items: PinLocation[]) => {
+const saveLocalMekanlar = (items: PinLocation[], shouldNotify = true) => {
   if (typeof window === 'undefined') return;
   const normalized = items.map(normalizePinData);
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalized));
-    notifyDataChanged();
+    if (shouldNotify) notifyDataChanged();
   } catch (error) {
     console.warn('LocalStorage quota warning, compressing image data:', error);
     const slimmed = normalized.map((p) => ({ ...p, images: p.images?.slice(0, 1) || [] }));
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(slimmed));
-      notifyDataChanged();
+      if (shouldNotify) notifyDataChanged();
     } catch (e) {
       console.error('Failed to save to local storage even after compression', e);
     }
@@ -128,12 +128,18 @@ const getLocalOlaylar = (): HistoricalEvent[] => {
   }
 };
 
+/**
+ * Returns encyclopedia content synchronously so the page never waits on the
+ * network before showing useful information.
+ */
+export const getCachedOlaylar = (): HistoricalEvent[] => getLocalOlaylar();
+
 // Helper to save local olaylar
-const saveLocalOlaylar = (items: HistoricalEvent[]) => {
+const saveLocalOlaylar = (items: HistoricalEvent[], shouldNotify = true) => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(LOCAL_STORAGE_OLAYLAR_KEY, JSON.stringify(items));
-    notifyDataChanged();
+    if (shouldNotify) notifyDataChanged();
   } catch (error) {
     console.error('Failed to save to local storage olaylar', error);
   }
@@ -183,12 +189,12 @@ export const fetchPinsFromDb = async (): Promise<PinLocation[]> => {
             savePinToDb(lp).catch((err) => console.warn('[db-service] Failed to auto-sync local pin:', err));
           });
           const combined = [...dbPins, ...localOnlyPins];
-          saveLocalMekanlar(combined);
+          saveLocalMekanlar(combined, false);
           return combined.map(normalizePinData);
         }
 
         console.log('[db-service] Returning', dbPins.length, 'pins directly from Supabase');
-        saveLocalMekanlar(dbPins);
+        saveLocalMekanlar(dbPins, false);
         return dbPins.map(normalizePinData);
       } else {
         console.log('[db-service] Supabase returned 0 pins, using localStorage');
@@ -311,11 +317,11 @@ export const fetchOlaylarFromDb = async (): Promise<HistoricalEvent[]> => {
             saveOlayToDb(lo).catch((err) => console.warn('[db-service] Failed to auto-sync local olay:', err));
           });
           const combined = [...dbOlaylar, ...localOnlyOlaylar];
-          saveLocalOlaylar(combined);
+          saveLocalOlaylar(combined, false);
           return combined;
         }
 
-        saveLocalOlaylar(dbOlaylar);
+        saveLocalOlaylar(dbOlaylar, false);
         return dbOlaylar;
       }
     } catch (e) {

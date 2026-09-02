@@ -98,48 +98,76 @@ function setLayoutSafely(map: MapLibreMap, layerId: string, property: string, va
 function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
   const style = map.getStyle();
   const layers = style.layers ?? [];
+  const isMuseum = styleKey === "museum";
 
   layers.forEach((layer) => {
     const sourceLayer = "source-layer" in layer ? String(layer["source-layer"] ?? "") : "";
     const key = `${layer.id} ${sourceLayer}`.toLowerCase();
 
     if (layer.type === "background") {
-      setPaintSafely(map, layer.id, "background-color", styleKey === "museum" ? "#edf3ef" : "#f4f6f4");
+      setPaintSafely(map, layer.id, "background-color", isMuseum ? "#efe8da" : "#f4f6f4");
       return;
     }
 
     if (layer.type === "fill") {
       if (/water|ocean|river|lake/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", styleKey === "museum" ? "#24a8c6" : "#82cad8");
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#22a6c2" : "#82cad8");
         setPaintSafely(map, layer.id, "fill-opacity", 1);
-      } else if (/park|wood|forest|grass|garden|nature|green|pitch/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", styleKey === "museum" ? "#b9d89c" : "#d6e6c8");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.9);
+        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#14859e" : "#66b9ca");
+      } else if (/beach|sand/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#ead29d" : "#efe4c8");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.95);
+      } else if (/park|wood|forest|grass|garden|nature|green/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#96c875" : "#d6e6c8");
+        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#77ae5c" : "#bfd6ae");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.94);
+      } else if (/pitch|stadium|sport/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#9ed1aa" : "#d5e8d9");
+        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#6eae81" : "#b8d6c0");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.92);
+      } else if (/hospital|medical/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#f0d3d0" : "#f3e5e3");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.88);
+      } else if (/school|university|college/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#eadcaa" : "#eee8d0");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.88);
       } else if (/building/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", styleKey === "museum" ? "#dfe6e2" : "#e8ece9");
-        setPaintSafely(map, layer.id, "fill-outline-color", "#c8d2cd");
-        setPaintSafely(map, layer.id, "fill-opacity", styleKey === "museum" ? 0.84 : 0.58);
-      } else if (/landuse|landcover|residential|commercial|industrial/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", styleKey === "museum" ? "#e7eee9" : "#eef1ef");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.64);
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#d7cab9" : "#e8ece9");
+        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#afa291" : "#c8d2cd");
+        setPaintSafely(map, layer.id, "fill-opacity", isMuseum ? 0.92 : 0.62);
+      } else if (/commercial|retail/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#efd7c7" : "#f0e8e2");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.78);
+      } else if (/industrial/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#dcd5e8" : "#e8e5ec");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.78);
+      } else if (/residential/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#ede4d6" : "#eef1ef");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.8);
+      } else if (/landuse|landcover/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#e5dfd1" : "#eef1ef");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.72);
       }
       return;
     }
 
     if (layer.type === "line") {
       if (/water|river|stream|canal/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", "#6bc9db");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#168aa5" : "#6bc9db");
       } else if (/motorway|trunk/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", "#cfab58");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#b86c2e" : "#cfab58");
       } else if (/primary/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", "#e1c983");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#d49a45" : "#e1c983");
       } else if (/secondary|tertiary/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", "#f1e5c3");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#e5c47b" : "#f1e5c3");
+      } else if (/rail/.test(key)) {
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#876d6a" : "#9ba3a0");
+        setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.72 : 0.48);
       } else if (/road|street|transportation/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", styleKey === "museum" ? "#fffdf7" : "#f8f5ee");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#fffaf0" : "#f8f5ee");
       } else if (/boundary|admin/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", "#a9b0a4");
-        setPaintSafely(map, layer.id, "line-opacity", 0.42);
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#777f78" : "#a9b0a4");
+        setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.58 : 0.42);
       }
       return;
     }
@@ -151,14 +179,17 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
       }
 
       if (/water/.test(key)) {
-        setPaintSafely(map, layer.id, "text-color", "#147e99");
+        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#086f88" : "#147e99");
         setPaintSafely(map, layer.id, "text-halo-color", "rgba(255,255,255,0.75)");
+      } else if (/park|wood|forest|garden/.test(key)) {
+        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#3f763b" : "#5d7856");
+        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#edf3e5" : "#f7faf8");
       } else if (/road|street/.test(key)) {
-        setPaintSafely(map, layer.id, "text-color", "#6c726e");
-        setPaintSafely(map, layer.id, "text-halo-color", "#f7faf8");
+        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#6a5c4f" : "#6c726e");
+        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#fffaf0" : "#f7faf8");
       } else {
-        setPaintSafely(map, layer.id, "text-color", "#334b56");
-        setPaintSafely(map, layer.id, "text-halo-color", "#f7faf8");
+        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#253944" : "#334b56");
+        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#f7f1e6" : "#f7faf8");
       }
       setPaintSafely(map, layer.id, "text-halo-width", 1.35);
       setPaintSafely(map, layer.id, "text-halo-blur", 0.35);
@@ -181,7 +212,7 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
         type: "fill-extrusion",
         minzoom: 13.2,
         paint: {
-          "fill-extrusion-color": ["interpolate", ["linear"], ["zoom"], 13.2, "#e2e9e5", 16, "#cbd6d0"],
+          "fill-extrusion-color": ["interpolate", ["linear"], ["zoom"], 13.2, "#dacdbb", 16, "#bca88d"],
           "fill-extrusion-height": [
             "interpolate",
             ["linear"],
@@ -192,7 +223,7 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
             ["coalesce", ["get", "render_height"], ["get", "height"], 7],
           ],
           "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], ["get", "min_height"], 0],
-          "fill-extrusion-opacity": styleKey === "museum" ? 0.76 : 0.5,
+          "fill-extrusion-opacity": styleKey === "museum" ? 0.88 : 0.5,
           "fill-extrusion-vertical-gradient": true,
         },
       },
@@ -369,8 +400,8 @@ export default function InteractiveMap({
       </div>
 
       {selectedPin && (
-        <aside className="map-place-preview absolute bottom-6 left-1/2 z-[10] flex w-[min(420px,calc(100%-40px))] -translate-x-1/2 overflow-hidden rounded-[18px] border border-white/10 bg-[#0b1118]/96 p-3 text-white shadow-2xl backdrop-blur-xl">
-          <div className="relative h-[124px] w-[148px] shrink-0 overflow-hidden rounded-[13px] bg-white/5">
+        <aside className="map-place-preview absolute bottom-6 left-1/2 z-[10] flex w-[min(420px,calc(100%-40px))] -translate-x-1/2 overflow-hidden rounded-[18px] border border-white/10 bg-[#0b1118]/96 p-2.5 text-white shadow-2xl backdrop-blur-xl sm:p-3">
+          <div className="relative h-[112px] w-[116px] shrink-0 overflow-hidden rounded-[13px] bg-white/5 sm:h-[124px] sm:w-[148px]">
             {selectedPinImage ? (
               <Image
                 src={selectedPinImage}
@@ -379,6 +410,7 @@ export default function InteractiveMap({
                 unoptimized={selectedPinImage.startsWith("http")}
                 sizes="148px"
                 className="object-cover"
+                loading="eager"
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-white/30">
@@ -387,14 +419,14 @@ export default function InteractiveMap({
             )}
           </div>
 
-          <div className="min-w-0 flex-1 px-4 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--accent)]">Seçili kültür noktası</p>
-            <h2 className="mt-1 line-clamp-2 text-[16px] font-semibold leading-snug text-white">{selectedPin.title}</h2>
+          <div className="min-w-0 flex-1 px-3 py-1.5 sm:px-4 sm:py-2">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] sm:text-[10px] sm:tracking-[0.15em]">Seçili kültür noktası</p>
+            <h2 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-white sm:text-[16px]">{selectedPin.title}</h2>
             <p className="mt-1 truncate text-[11px] text-white/50">{selectedPin.categoryLabel} · {selectedPin.era}</p>
             <button
               type="button"
               onClick={() => onOpenPin(selectedPin)}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-3.5 py-2 text-[11px] font-semibold text-[#11161c] transition-colors hover:bg-[#dfbd73]"
+              className="mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[var(--accent)] px-3 py-2 text-[11px] font-semibold text-[#11161c] transition-colors hover:bg-[#dfbd73] sm:mt-3 sm:gap-2 sm:px-3.5"
             >
               Detayı Gör <ArrowRight size={13} />
             </button>

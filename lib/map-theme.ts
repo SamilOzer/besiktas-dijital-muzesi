@@ -9,6 +9,7 @@ export const MAP_CATEGORY_COLORS: Record<string, string> = {
 export const MAP_CATEGORY_LEGEND = [
   { id: "saraylar", label: "Saraylar" },
   { id: "tarihi-yapilar", label: "Tarihi yapılar" },
-  { id: "dini-kamusal", label: "Kamusal" },
+  { id: "dini-kamusal", label: "Dini & kamusal" },
   { id: "heykeller", label: "Anıtlar" },
+  { id: "spor", label: "Spor" },
 ] as const;

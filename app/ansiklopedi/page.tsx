@@ -2,8 +2,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { X, Search, BookOpen, MapPin, Calendar, Share2, ChevronLeft, ChevronRight } from "lucide-react";
 import { createPortal } from "react-dom";
-import { HistoricalEvent, EventCategory } from "@/data/ansiklopediData";
-import { fetchOlaylarFromDb } from "@/lib/db-service";
+import { ansiklopediData, HistoricalEvent, EventCategory } from "@/data/ansiklopediData";
+import { fetchOlaylarFromDb, getCachedOlaylar } from "@/lib/db-service";
 
 const CATEGORIES: { id: string; label: string; emoji: string }[] = [
   { id: "all",       label: "Tümü",              emoji: "📚" },
@@ -24,9 +24,41 @@ const ERA_COLORS: Record<string, string> = {
   "II. Abdülhamid Dönemi":  "#4a9ead",
 };
 
+function EventImage({ src, label, className = "" }: { src?: string; label: string; className?: string }) {
+  const [imageState, setImageState] = useState<"loading" | "ready" | "error">(src ? "loading" : "error");
+
+  useEffect(() => {
+    setImageState(src ? "loading" : "error");
+  }, [src]);
+
+  return (
+    <div className={`relative h-full w-full overflow-hidden bg-[#10141a] ${className}`} aria-label={label} role="img">
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1a2028] via-[#11161c] to-[#0b0e12] text-[var(--accent)]/35">
+        <BookOpen size={34} strokeWidth={1.35} aria-hidden="true" />
+      </div>
+      {src && imageState !== "error" && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt=""
+          aria-hidden="true"
+          className={`absolute inset-0 h-full w-full transition-opacity duration-300 ${imageState === "ready" ? "opacity-100" : "opacity-0"}`}
+          style={{ objectFit: "cover" }}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setImageState("ready")}
+          onError={() => setImageState("error")}
+        />
+      )}
+    </div>
+  );
+}
+
 function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () => void }) {
   const eraColor = ERA_COLORS[event.era] ?? "#c5a059";
-  const eventImages = (event.images && event.images.length > 0 ? event.images : [event.image]).filter(Boolean);
+  const eventImages = (event.images && event.images.length > 0 ? event.images : [event.image]).filter(
+    (image): image is string => Boolean(image)
+  );
   const [imgIdx, setImgIdx] = useState(0);
   const [mounted, setMounted] = useState(false);
 
@@ -69,7 +101,7 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
           className="md:col-span-7 flex flex-col min-h-0 overflow-y-auto p-5 md:p-8 order-2 md:order-1 border-t md:border-t-0 md:border-r border-white/10"
           style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
         >
-          
+
           {/* Era + Category + Date badges */}
           <div className="flex flex-wrap items-center gap-2 mb-4 flex-shrink-0">
             <span
@@ -100,12 +132,12 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
           <div className="border-t border-white/8 mb-5 flex-shrink-0" />
 
           {/* Full description — no summary pull-quote */}
-          <div className="text-sm text-neutral-300 leading-7 whitespace-pre-line mb-6 flex-1 min-h-0">
+          <div className="mb-6 break-words whitespace-pre-line text-sm leading-7 text-neutral-300">
             {event.fullText || event.description || event.summary}
           </div>
 
           {/* Tags + Share */}
-          <div className="flex items-center justify-between flex-wrap gap-4 pt-2 border-t border-white/8 mt-auto flex-shrink-0">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-t border-white/8 pt-4">
             <div className="flex flex-wrap gap-2">
               {event.tags.map((tag) => (
                 <span
@@ -136,20 +168,11 @@ function EventModal({ event, onClose }: { event: HistoricalEvent; onClose: () =>
 
         {/* ── Right Column: Fotoğraflar & Carousel (MD: 5 cols) ── */}
         <div className="md:col-span-5 relative flex-shrink-0 h-52 md:h-full bg-[#07080a] flex items-center justify-center order-1 md:order-2 overflow-hidden group">
-          {eventImages.length > 0 ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={eventImages[imgIdx]}
-              alt={`${event.title} foto ${imgIdx + 1}`}
-              className="w-full h-full object-contain"
-              loading="lazy"
-              style={{ padding: "8px" }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-8xl opacity-10">
-              <BookOpen size={80} />
-            </div>
-          )}
+          <EventImage
+            src={eventImages[imgIdx]}
+            label={`${event.title} fotoğrafı ${imgIdx + 1}`}
+            className="[&>img]:!object-contain [&>img]:p-2"
+          />
 
           {/* Close button (top right) */}
           <button
@@ -216,11 +239,15 @@ export default function AnsiklopediPage() {
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeEvent, setActiveEvent] = useState<HistoricalEvent | null>(null);
-  const [events, setEvents] = useState<HistoricalEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<HistoricalEvent[]>(ansiklopediData);
 
   useEffect(() => {
     let isMounted = true;
+
+    // Static content renders with the first HTML response; the freshest browser
+    // cache replaces it immediately, while Supabase sync continues in the background.
+    setEvents(getCachedOlaylar());
+
     const loadEvents = async () => {
       try {
         const data = await fetchOlaylarFromDb();
@@ -229,16 +256,14 @@ export default function AnsiklopediPage() {
         }
       } catch (e) {
         console.error("Error loading events:", e);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
       }
     };
 
-    loadEvents();
+    void loadEvents();
 
-    const handleUpdate = () => loadEvents();
+    const handleUpdate = () => {
+      if (isMounted) setEvents(getCachedOlaylar());
+    };
     window.addEventListener("besiktas_data_updated", handleUpdate);
     window.addEventListener("storage", handleUpdate);
 
@@ -275,11 +300,11 @@ export default function AnsiklopediPage() {
   };
 
   return (
-    <main className="min-h-screen pt-28 pb-24 px-6 md:px-[8vw]">
+    <main className="min-h-screen px-4 pb-24 pt-28 sm:px-6 md:px-[8vw]">
       {/* ─── Header ─── */}
       <div className="max-w-screen-xl mx-auto">
         <p className="eyebrow mb-3">Beşiktaş Belediyesi</p>
-        <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight tracking-tight">
+        <h1 className="mb-4 max-w-4xl break-words text-[clamp(2.45rem,6vw,4.5rem)] font-bold leading-[1.02] tracking-[-0.035em] text-white">
           Beşiktaş&apos;ta Geçen
           <br />
           <span className="text-[var(--accent)]">Tarihi Olaylar</span>
@@ -291,7 +316,7 @@ export default function AnsiklopediPage() {
 
         {/* ─── Search & Dropdown Filters Bar ─── */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 mb-8">
-          <div className="relative flex-1 min-w-[240px]">
+          <div className="relative min-w-0 flex-1">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
             <input
               type="text"
@@ -303,12 +328,12 @@ export default function AnsiklopediPage() {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center">
             {/* Era Filter */}
             <select
               value={selectedEra}
               onChange={(e) => setSelectedEra(e.target.value)}
-              className="bg-[#14161d] border border-white/15 rounded-xl px-4 py-3 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full min-w-0 rounded-xl border border-white/15 bg-[#14161d] px-4 py-3 text-xs text-white focus:border-[var(--accent)] focus:outline-none sm:w-auto [&>option]:bg-[#14161d]"
             >
               <option value="all">📅 Tüm Dönemler</option>
               <option value="Osmanlı Klasik Dönemi">Osmanlı Klasik Dönemi</option>
@@ -324,7 +349,7 @@ export default function AnsiklopediPage() {
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="bg-[#14161d] border border-white/15 rounded-xl px-4 py-3 text-xs text-white [&>option]:bg-[#14161d] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full min-w-0 rounded-xl border border-white/15 bg-[#14161d] px-4 py-3 text-xs text-white focus:border-[var(--accent)] focus:outline-none sm:w-auto [&>option]:bg-[#14161d]"
             >
               <option value="all">📍 Tüm Konumlar</option>
               <option value="Beşiktaş Meydanı">Beşiktaş Meydanı</option>
@@ -389,20 +414,16 @@ export default function AnsiklopediPage() {
                 <button
                   key={event.id}
                   id={`event-card-${event.id}`}
-                  className="ansiklopedi-card text-left"
+                  className="ansiklopedi-card group flex h-full min-w-0 flex-col text-left"
                   onClick={() => setActiveEvent(event)}
                 >
                   {/* Card image */}
                   {cardImage ? (
-                    <div className="w-full h-44 rounded-xl overflow-hidden mb-4 bg-[#0a0b0e]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={cardImage}
-                        alt={event.title}
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                        loading="lazy"
-                      />
-                    </div>
+                    <EventImage
+                      src={cardImage}
+                      label={`${event.title} görseli`}
+                      className="mb-4 h-44 rounded-xl [&>img]:opacity-85 group-hover:[&>img]:opacity-100"
+                    />
                   ) : null}
 
                   {/* Era badge */}
@@ -419,7 +440,7 @@ export default function AnsiklopediPage() {
                   </div>
 
                   {/* Title */}
-                  <h2 className="text-base font-bold text-white leading-snug mb-2">
+                  <h2 className="mb-2 break-words text-base font-bold leading-snug text-white">
                     {event.title}
                   </h2>
 
@@ -430,9 +451,9 @@ export default function AnsiklopediPage() {
 
                   {/* Location */}
                   {event.location && (
-                    <div className="flex items-center gap-1.5 mt-3 text-[11px] text-[var(--muted)]">
+                    <div className="mt-3 flex min-w-0 items-start gap-1.5 text-[11px] text-[var(--muted)]">
                       <MapPin size={10} style={{ color: eraColor }} />
-                      <span>{event.location}</span>
+                      <span className="min-w-0 break-words">{event.location}</span>
                     </div>
                   )}
 
