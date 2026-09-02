@@ -609,7 +609,7 @@ body:has(.harita-page-root) footer {
 
 /* ─── MapLibre museum atlas ───────────────────── */
 .maplibregl-map {
-  background: #b8c9ca;
+  background: #69b8d4;
   color: #263540;
   font-family: 'Inter', sans-serif;
 }

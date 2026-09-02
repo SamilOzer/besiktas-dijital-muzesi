@@ -217,7 +217,7 @@ export default function HaritaPage() {
       </button>
 
       {/* ── Map ─────────────────────────────────────── */}
-      <div className="relative h-full flex-1 bg-[#b8c9ca]">
+      <div className="relative h-full flex-1 bg-[#69b8d4]">
         <InteractiveMap
           pins={filteredPins}
           selectedPin={selectedPin}

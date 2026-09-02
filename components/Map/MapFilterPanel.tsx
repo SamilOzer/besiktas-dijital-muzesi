@@ -17,7 +17,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { NEIGHBORHOODS, TIME_PERIODS } from "@/data/besiktasPinData";
-import { MAP_CATEGORY_COLORS } from "@/lib/map-theme";
+import { MAP_CATEGORY_COLORS, MAP_TIME_PERIOD_COLORS } from "@/lib/map-theme";
 
 const CATEGORIES: Array<{ id: string; label: string; icon: LucideIcon; color: string }> = [
   { id: "all", label: "Tümü", icon: Map, color: "#c6a25c" },
@@ -27,14 +27,6 @@ const CATEGORIES: Array<{ id: string; label: string; icon: LucideIcon; color: st
   { id: "spor", label: "Stadyum & Spor", icon: Trophy, color: MAP_CATEGORY_COLORS.spor },
   { id: "dini-kamusal", label: "Dini & Kamusal", icon: Church, color: MAP_CATEGORY_COLORS["dini-kamusal"] },
 ];
-
-const TIME_PERIOD_COLORS: Record<string, string> = {
-  "1400-1600": "#c6a25c",
-  "1600-1800": "#8065a8",
-  "1800-1850": "#467ca4",
-  "1850-1900": "#4f8b7e",
-  "1900-1960": "#b85e48",
-};
 
 interface MapFilterPanelProps {
   searchQuery: string;
@@ -190,7 +182,7 @@ export default function MapFilterPanel({
           <FilterSection title="Tarihi dönem" icon={Clock3} activeLabel={activePeriod}>
             <div className="space-y-1">
               {TIME_PERIODS.map(({ id, label, range }) => {
-                const color = id === "all" ? "#b7bdc6" : TIME_PERIOD_COLORS[id] ?? "#c6a25c";
+                const color = id === "all" ? "#b7bdc6" : MAP_TIME_PERIOD_COLORS[id] ?? "#c6a25c";
                 const active = selectedTimePeriod === id;
                 return (
                   <button
