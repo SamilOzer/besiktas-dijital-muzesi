@@ -1,16 +1,11 @@
 "use client";
 
-import { createElement, useEffect, useRef, useState } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import maplibregl, { Map as MapLibreMap, Marker as MapLibreMarker, Popup } from "maplibre-gl";
-import type { LucideIcon } from "lucide-react";
+import maplibregl, { GeoJSONSource, Map as MapLibreMap, Popup } from "maplibre-gl";
 import {
   ArrowRight,
-  Building2,
-  Castle,
   Check,
-  Church,
   Compass,
   Landmark,
   Layers3,
@@ -18,7 +13,6 @@ import {
   Minus,
   Plus,
   Sparkles,
-  Trophy,
   X,
 } from "lucide-react";
 import { PinLocation } from "@/data/besiktasPinData";
@@ -35,16 +29,16 @@ interface InteractiveMapProps {
 
 const BESIKTAS_CENTER: [number, number] = [29.016, 41.0525];
 const DEFAULT_ZOOM = 13.35;
-const DEFAULT_PITCH = 38;
-const DEFAULT_BEARING = -10;
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  heykeller: Landmark,
-  saraylar: Castle,
-  "tarihi-yapilar": Building2,
-  spor: Trophy,
-  "dini-kamusal": Church,
-};
+const DEFAULT_PITCH = 52;
+const DEFAULT_BEARING = -14;
+const PIN_SOURCE_ID = "museum-pins";
+const PIN_HALO_LAYER_ID = "museum-pin-halo";
+const PIN_LAYER_ID = "museum-pin-points";
+const PIN_CORE_LAYER_ID = "museum-pin-core";
+const SELECTED_PIN_LAYER_ID = "museum-selected-pin";
+const CLUSTER_HALO_LAYER_ID = "museum-cluster-halo";
+const CLUSTER_LAYER_ID = "museum-clusters";
+const CLUSTER_COUNT_LAYER_ID = "museum-cluster-count";
 
 const MAP_STYLES = {
   museum: {
@@ -62,7 +56,156 @@ const MAP_STYLES = {
 } as const;
 
 type MapStyleKey = keyof typeof MAP_STYLES;
-type MarkerRecord = { marker: MapLibreMarker; popup: Popup; element: HTMLButtonElement };
+
+type PinFeatureProperties = {
+  id: string;
+  title: string;
+  category: string;
+  categoryLabel: string;
+  neighborhood: string;
+};
+
+function pinsToGeoJson(pins: PinLocation[]): GeoJSON.FeatureCollection<GeoJSON.Point, PinFeatureProperties> {
+  return {
+    type: "FeatureCollection",
+    features: pins.map((pin) => {
+      const [lat, lng] = pin.coordinates;
+      return {
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [lng, lat] },
+        properties: {
+          id: pin.id,
+          title: pin.title,
+          category: pin.category,
+          categoryLabel: pin.categoryLabel,
+          neighborhood: pin.neighborhood,
+        },
+      };
+    }),
+  };
+}
+
+const PIN_COLOR_EXPRESSION: maplibregl.ExpressionSpecification = [
+  "match",
+  ["get", "category"],
+  "heykeller",
+  MAP_CATEGORY_COLORS.heykeller,
+  "saraylar",
+  MAP_CATEGORY_COLORS.saraylar,
+  "tarihi-yapilar",
+  MAP_CATEGORY_COLORS["tarihi-yapilar"],
+  "spor",
+  MAP_CATEGORY_COLORS.spor,
+  "dini-kamusal",
+  MAP_CATEGORY_COLORS["dini-kamusal"],
+  "#c18a38",
+];
+
+function addPinLayers(map: MapLibreMap, pins: PinLocation[], selectedPinId: string | null) {
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+  map.addSource(PIN_SOURCE_ID, {
+    type: "geojson",
+    data: pinsToGeoJson(pins),
+    cluster: true,
+    clusterMaxZoom: 14,
+    clusterRadius: isMobile ? 38 : 54,
+  });
+
+  map.addLayer({
+    id: CLUSTER_HALO_LAYER_ID,
+    type: "circle",
+    source: PIN_SOURCE_ID,
+    filter: ["has", "point_count"],
+    paint: {
+      "circle-color": "#ffffff",
+      "circle-opacity": 0.36,
+      "circle-radius": ["step", ["get", "point_count"], isMobile ? 18 : 27, 6, isMobile ? 22 : 32, 12, isMobile ? 26 : 37],
+      "circle-blur": 0.25,
+    },
+  });
+
+  map.addLayer({
+    id: CLUSTER_LAYER_ID,
+    type: "circle",
+    source: PIN_SOURCE_ID,
+    filter: ["has", "point_count"],
+    paint: {
+      "circle-color": ["step", ["get", "point_count"], "#1d7871", 6, "#356f93", 12, "#72569a"],
+      "circle-radius": ["step", ["get", "point_count"], isMobile ? 13 : 20, 6, isMobile ? 16 : 25, 12, isMobile ? 20 : 30],
+      "circle-stroke-color": "rgba(255,255,255,0.96)",
+      "circle-stroke-width": isMobile ? 2 : 3,
+    },
+  });
+
+  map.addLayer({
+    id: CLUSTER_COUNT_LAYER_ID,
+    type: "symbol",
+    source: PIN_SOURCE_ID,
+    filter: ["has", "point_count"],
+    layout: {
+      "text-field": ["get", "point_count_abbreviated"],
+      "text-font": ["Noto Sans Regular"],
+      "text-size": isMobile ? 10 : 12,
+      "text-allow-overlap": true,
+    },
+    paint: {
+      "text-color": "#ffffff",
+      "text-halo-color": "rgba(10,18,24,0.22)",
+      "text-halo-width": 0.7,
+    },
+  });
+
+  map.addLayer({
+    id: PIN_HALO_LAYER_ID,
+    type: "circle",
+    source: PIN_SOURCE_ID,
+    filter: ["!", ["has", "point_count"]],
+    paint: {
+      "circle-color": PIN_COLOR_EXPRESSION,
+      "circle-radius": isMobile ? 12 : 23,
+      "circle-opacity": 0.2,
+      "circle-blur": 0.3,
+    },
+  });
+
+  map.addLayer({
+    id: PIN_LAYER_ID,
+    type: "circle",
+    source: PIN_SOURCE_ID,
+    filter: ["!", ["has", "point_count"]],
+    paint: {
+      "circle-color": PIN_COLOR_EXPRESSION,
+      "circle-radius": isMobile ? 8 : 15,
+      "circle-stroke-color": "rgba(255,255,255,0.98)",
+      "circle-stroke-width": isMobile ? 2 : 3,
+    },
+  });
+
+  map.addLayer({
+    id: PIN_CORE_LAYER_ID,
+    type: "circle",
+    source: PIN_SOURCE_ID,
+    filter: ["!", ["has", "point_count"]],
+    paint: {
+      "circle-color": "rgba(255,255,255,0.94)",
+      "circle-radius": isMobile ? 2 : 3.2,
+    },
+  });
+
+  map.addLayer({
+    id: SELECTED_PIN_LAYER_ID,
+    type: "circle",
+    source: PIN_SOURCE_ID,
+    filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "id"], selectedPinId ?? "__none__"]],
+    paint: {
+      "circle-color": "rgba(255,255,255,0.08)",
+      "circle-radius": isMobile ? 12 : 21,
+      "circle-stroke-color": "#d6ae59",
+      "circle-stroke-width": isMobile ? 2.5 : 4,
+    },
+  });
+}
 
 function buildTooltip(pin: PinLocation) {
   const content = document.createElement("div");
@@ -210,20 +353,20 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
         source: vectorSourceId,
         "source-layer": "building",
         type: "fill-extrusion",
-        minzoom: 13.2,
+        minzoom: 12.7,
         paint: {
-          "fill-extrusion-color": ["interpolate", ["linear"], ["zoom"], 13.2, "#dacdbb", 16, "#bca88d"],
+          "fill-extrusion-color": ["interpolate", ["linear"], ["zoom"], 12.7, "#e5d8c7", 16, "#ae9676"],
           "fill-extrusion-height": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            13.2,
+            12.7,
             0,
-            14.5,
+            13.15,
             ["coalesce", ["get", "render_height"], ["get", "height"], 7],
           ],
           "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], ["get", "min_height"], 0],
-          "fill-extrusion-opacity": styleKey === "museum" ? 0.88 : 0.5,
+          "fill-extrusion-opacity": styleKey === "museum" ? 0.92 : 0.48,
           "fill-extrusion-vertical-gradient": true,
         },
       },
@@ -232,21 +375,6 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
   } catch {
     // The live provider can change source-layer names; the 2D map remains usable.
   }
-}
-
-function buildMarkerElement(pin: PinLocation, selected: boolean) {
-  const Icon = CATEGORY_ICONS[pin.category] ?? Landmark;
-  const color = MAP_CATEGORY_COLORS[pin.category] ?? "#c18a38";
-  const element = document.createElement("button");
-  element.type = "button";
-  element.className = `museum-map-marker${selected ? " is-selected" : ""}`;
-  element.style.setProperty("--marker-color", color);
-  element.setAttribute("aria-label", `${pin.title} — ${pin.categoryLabel}`);
-  element.setAttribute("title", pin.title);
-  element.innerHTML = renderToStaticMarkup(
-    createElement(Icon, { size: selected ? 21 : 18, strokeWidth: 2, "aria-hidden": true })
-  );
-  return element;
 }
 
 export default function InteractiveMap({
@@ -258,8 +386,10 @@ export default function InteractiveMap({
 }: InteractiveMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
-  const markersRef = useRef<MarkerRecord[]>([]);
   const onPinSelectRef = useRef(onPinSelect);
+  const pinsRef = useRef(pins);
+  const pinIndexRef = useRef(new Map(pins.map((pin) => [pin.id, pin])));
+  const selectedPinIdRef = useRef<string | null>(selectedPin?.id ?? null);
   const mapStyleRef = useRef<MapStyleKey>("museum");
   const activeMapStyleRef = useRef<MapStyleKey>("museum");
   const [mapReady, setMapReady] = useState(false);
@@ -271,6 +401,12 @@ export default function InteractiveMap({
   useEffect(() => {
     onPinSelectRef.current = onPinSelect;
   }, [onPinSelect]);
+
+  useEffect(() => {
+    pinsRef.current = pins;
+    pinIndexRef.current = new Map(pins.map((pin) => [pin.id, pin]));
+    selectedPinIdRef.current = selectedPin?.id ?? null;
+  }, [pins, selectedPin?.id]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -294,20 +430,95 @@ export default function InteractiveMap({
 
     const handleStyleLoad = () => {
       applyMuseumPalette(map, mapStyleRef.current);
+      addPinLayers(map, pinsRef.current, selectedPinIdRef.current);
       setMapReady(true);
     };
     const handleZoom = () => setZoomLevel(Math.round(map.getZoom() * 10) / 10);
+    const hoverPopup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      offset: 18,
+      className: "museum-map-popup",
+    });
+    let hoveredPinId: string | null = null;
+
+    const interactiveLayers = () =>
+      [CLUSTER_LAYER_ID, PIN_LAYER_ID, SELECTED_PIN_LAYER_ID].filter((layerId) => Boolean(map.getLayer(layerId)));
+
+    const handleMapClick = async (event: maplibregl.MapMouseEvent) => {
+      const layers = interactiveLayers();
+      if (layers.length === 0) return;
+
+      const feature = map.queryRenderedFeatures(event.point, { layers })[0];
+      if (!feature || feature.geometry.type !== "Point") return;
+      const coordinates = feature.geometry.coordinates as [number, number];
+
+      if (feature.properties?.cluster) {
+        const source = map.getSource(PIN_SOURCE_ID) as GeoJSONSource | undefined;
+        const clusterId = Number(feature.properties.cluster_id);
+        if (!source || !Number.isFinite(clusterId)) return;
+        const expansionZoom = await source.getClusterExpansionZoom(clusterId);
+        map.easeTo({
+          center: coordinates,
+          zoom: expansionZoom,
+          pitch: mapStyleRef.current === "museum" ? DEFAULT_PITCH : MAP_STYLES.calm.pitch,
+          duration: 650,
+        });
+        return;
+      }
+
+      const pinId = String(feature.properties?.id ?? "");
+      const pin = pinIndexRef.current.get(pinId);
+      if (!pin) return;
+      onPinSelectRef.current(pin);
+      map.easeTo({
+        center: coordinates,
+        zoom: Math.max(map.getZoom(), 14.25),
+        pitch: mapStyleRef.current === "museum" ? 56 : MAP_STYLES.calm.pitch,
+        duration: 650,
+      });
+    };
+
+    const handlePointerMove = (event: maplibregl.MapMouseEvent) => {
+      const layers = interactiveLayers();
+      if (layers.length === 0) return;
+      const features = map.queryRenderedFeatures(event.point, { layers });
+      const feature = features.find((item) => !item.properties?.cluster && item.properties?.id);
+      map.getCanvas().style.cursor = features.length > 0 ? "pointer" : "";
+
+      if (!feature || feature.geometry.type !== "Point") {
+        hoveredPinId = null;
+        hoverPopup.remove();
+        return;
+      }
+
+      const pinId = String(feature.properties?.id ?? "");
+      if (hoveredPinId === pinId) return;
+      const pin = pinIndexRef.current.get(pinId);
+      if (!pin) return;
+      hoveredPinId = pinId;
+      hoverPopup
+        .setLngLat(feature.geometry.coordinates as [number, number])
+        .setDOMContent(buildTooltip(pin))
+        .addTo(map);
+    };
+
+    const handlePointerLeave = () => {
+      map.getCanvas().style.cursor = "";
+      hoveredPinId = null;
+      hoverPopup.remove();
+    };
 
     map.on("style.load", handleStyleLoad);
     map.on("zoom", handleZoom);
+    map.on("click", handleMapClick);
+    map.on("mousemove", handlePointerMove);
+    map.getCanvas().addEventListener("mouseleave", handlePointerLeave);
     mapRef.current = map;
 
     return () => {
-      markersRef.current.forEach(({ marker, popup }) => {
-        popup.remove();
-        marker.remove();
-      });
-      markersRef.current = [];
+      hoverPopup.remove();
+      map.getCanvas().removeEventListener("mouseleave", handlePointerLeave);
       map.remove();
       mapRef.current = null;
     };
@@ -329,33 +540,15 @@ export default function InteractiveMap({
     const map = mapRef.current;
     if (!map || !mapReady) return;
 
-    markersRef.current.forEach(({ marker, popup }) => {
-      popup.remove();
-      marker.remove();
-    });
-    markersRef.current = pins.map((pin) => {
-      const selected = selectedPin?.id === pin.id;
-      const element = buildMarkerElement(pin, selected);
-      const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 26, className: "museum-map-popup" })
-        .setDOMContent(buildTooltip(pin));
-      const [lat, lng] = pin.coordinates;
-      const marker = new maplibregl.Marker({ element, anchor: "center" }).setLngLat([lng, lat]).addTo(map);
-
-      const showPopup = () => popup.setLngLat([lng, lat]).addTo(map);
-      const hidePopup = () => popup.remove();
-      const selectPin = () => {
-        onPinSelectRef.current(pin);
-        map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 14.2), duration: 650 });
-      };
-
-      element.addEventListener("mouseenter", showPopup);
-      element.addEventListener("mouseleave", hidePopup);
-      element.addEventListener("focus", showPopup);
-      element.addEventListener("blur", hidePopup);
-      element.addEventListener("click", selectPin);
-
-      return { marker, popup, element };
-    });
+    const source = map.getSource(PIN_SOURCE_ID) as GeoJSONSource | undefined;
+    source?.setData(pinsToGeoJson(pins));
+    if (map.getLayer(SELECTED_PIN_LAYER_ID)) {
+      map.setFilter(SELECTED_PIN_LAYER_ID, [
+        "all",
+        ["!", ["has", "point_count"]],
+        ["==", ["get", "id"], selectedPin?.id ?? "__none__"],
+      ]);
+    }
   }, [pins, selectedPin?.id, mapReady]);
 
   const zoomIn = () => mapRef.current?.zoomIn({ duration: 350 });

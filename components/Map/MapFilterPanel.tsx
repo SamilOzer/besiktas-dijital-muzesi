@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -17,8 +16,7 @@ import {
   Search,
   Trophy,
 } from "lucide-react";
-import { NEIGHBORHOODS, PinLocation, TIME_PERIODS } from "@/data/besiktasPinData";
-import { FEATURED_MAP_PIN_ORDER, getMapImage } from "@/lib/map-images";
+import { NEIGHBORHOODS, TIME_PERIODS } from "@/data/besiktasPinData";
 import { MAP_CATEGORY_COLORS } from "@/lib/map-theme";
 
 const CATEGORIES: Array<{ id: string; label: string; icon: LucideIcon; color: string }> = [
@@ -44,13 +42,10 @@ interface MapFilterPanelProps {
   selectedTimePeriod: string;
   selectedNeighborhood: string;
   resultCount: number;
-  pins: PinLocation[];
-  selectedPinId: string | null;
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onTimePeriodChange: (value: string) => void;
   onNeighborhoodChange: (value: string) => void;
-  onPinSelect: (pin: PinLocation) => void;
   onReset: () => void;
 }
 
@@ -104,13 +99,10 @@ export default function MapFilterPanel({
   selectedTimePeriod,
   selectedNeighborhood,
   resultCount,
-  pins,
-  selectedPinId,
   onSearchChange,
   onCategoryChange,
   onTimePeriodChange,
   onNeighborhoodChange,
-  onPinSelect,
   onReset,
 }: MapFilterPanelProps) {
   const hasActiveFilter =
@@ -123,14 +115,6 @@ export default function MapFilterPanel({
   const activePeriod = TIME_PERIODS.find((item) => item.id === selectedTimePeriod)?.label ?? "Tüm dönemler";
   const activeNeighborhood =
     NEIGHBORHOODS.find((item) => item.id === selectedNeighborhood)?.label ?? "Tüm mahalleler";
-  const displayedPins = [...pins].sort((left, right) => {
-    const leftIndex = FEATURED_MAP_PIN_ORDER.indexOf(left.id as (typeof FEATURED_MAP_PIN_ORDER)[number]);
-    const rightIndex = FEATURED_MAP_PIN_ORDER.indexOf(right.id as (typeof FEATURED_MAP_PIN_ORDER)[number]);
-    const leftRank = leftIndex === -1 ? FEATURED_MAP_PIN_ORDER.length : leftIndex;
-    const rightRank = rightIndex === -1 ? FEATURED_MAP_PIN_ORDER.length : rightIndex;
-    return leftRank - rightRank;
-  });
-
   return (
     <div className="flex h-full min-w-[300px] flex-col text-white">
       <div className="shrink-0 border-b border-white/10 px-5 pb-5 pt-6">
@@ -257,66 +241,6 @@ export default function MapFilterPanel({
           </FilterSection>
         </div>
 
-        <section className="px-5 py-5" aria-labelledby="nearby-title">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 id="nearby-title" className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/55">
-              Haritadaki noktalar
-            </h2>
-            <span className="text-[10px] text-white/30">İlk {Math.min(pins.length, 3)}</span>
-          </div>
-
-          {pins.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/15 px-4 py-6 text-center text-xs text-white/40">
-              Bu filtrelerle eşleşen bir mekân bulunamadı.
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {displayedPins.slice(0, 3).map((pin) => {
-                const active = selectedPinId === pin.id;
-                const imageSrc = getMapImage(pin);
-                const pinColor = MAP_CATEGORY_COLORS[pin.category] ?? "#c6a25c";
-                return (
-                  <button
-                    type="button"
-                    key={pin.id}
-                    onClick={() => onPinSelect(pin)}
-                    className="group flex w-full items-center gap-3 rounded-xl border p-2 text-left transition-colors hover:bg-white/5"
-                    style={{
-                      borderColor: active ? `${pinColor}8a` : "transparent",
-                      background: active ? `${pinColor}17` : undefined,
-                    }}
-                  >
-                    <span className="relative h-14 w-[72px] shrink-0 overflow-hidden rounded-lg bg-white/5">
-                      <span className="absolute inset-0 flex items-center justify-center text-white/30">
-                        <Landmark size={20} />
-                      </span>
-                      {imageSrc ? (
-                        <Image
-                          src={imageSrc}
-                          alt={`${pin.title} görünümü`}
-                          fill
-                          unoptimized={imageSrc.startsWith("http")}
-                          sizes="72px"
-                          className="z-10 object-cover transition-transform duration-300 group-hover:scale-105"
-                          onError={(event) => {
-                            event.currentTarget.style.display = "none";
-                          }}
-                        />
-                      ) : null}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-semibold text-white/90">{pin.title}</span>
-                      <span className="mt-1 block truncate text-[11px]" style={{ color: pinColor }}>
-                        {pin.categoryLabel}
-                      </span>
-                      <span className="mt-0.5 block truncate text-[10px] text-white/35">{pin.era}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </section>
       </div>
     </div>
   );

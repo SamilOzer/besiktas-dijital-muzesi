@@ -182,13 +182,10 @@ export default function HaritaPage() {
             selectedNeighborhood={selectedNeighborhood}
             searchQuery={searchQuery}
             resultCount={filteredPins.length}
-            pins={filteredPins}
-            selectedPinId={selectedPin?.id ?? null}
             onCategoryChange={setSelectedCategory}
             onTimePeriodChange={setSelectedTimePeriod}
             onNeighborhoodChange={setSelectedNeighborhood}
             onSearchChange={setSearchQuery}
-            onPinSelect={(pin) => setSelectedPinId(pin.id)}
             onReset={handleReset}
           />
         )}
