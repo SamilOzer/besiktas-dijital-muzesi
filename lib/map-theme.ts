@@ -1,9 +1,9 @@
 export const MAP_CATEGORY_COLORS: Record<string, string> = {
-  heykeller: "#c94f65",
-  saraylar: "#7652a5",
-  "tarihi-yapilar": "#2876a8",
-  spor: "#d28a2f",
-  "dini-kamusal": "#21857d",
+  heykeller: "#946277",
+  saraylar: "#9a7646",
+  "tarihi-yapilar": "#4f7182",
+  spor: "#6f8058",
+  "dini-kamusal": "#52766f",
 };
 
 export const MAP_CATEGORY_LEGEND = [

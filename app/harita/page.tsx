@@ -5,7 +5,7 @@ import LandmarkModal from "@/components/Map/LandmarkModal";
 import MapFilterPanel from "@/components/Map/MapFilterPanel";
 import { PinLocation, besiktasPinData } from "@/data/besiktasPinData";
 import { normalizePinData, fetchPinsFromDb } from "@/lib/db-service";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, SlidersHorizontal } from "lucide-react";
 
 // MapLibre uses WebGL and must stay client-only.
 const InteractiveMap = dynamic(
@@ -171,7 +171,8 @@ export default function HaritaPage() {
       {/* ── Sidebar ─────────────────────────────────── */}
       <aside
         className="map-sidebar absolute z-20 flex h-full flex-col overflow-hidden border-r border-white/10 bg-[#0b1118] transition-all duration-300 md:relative md:z-auto"
-        style={{ width: sidebarOpen ? "min(88vw, 360px)" : "0px" }}
+        style={{ width: sidebarOpen ? "min(86vw, 360px)" : "0px" }}
+        id="map-filter-sidebar"
         aria-label="Filtreler"
       >
         {/* Only render contents when open to avoid layout artifacts */}
@@ -202,19 +203,21 @@ export default function HaritaPage() {
       {/* ── Toggle sidebar button ────────────────────── */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="map-sidebar-toggle absolute bottom-6 z-[1300] flex h-10 w-9 items-center justify-center rounded-r-xl border border-l-0 border-white/15 bg-[#0b1118] text-[var(--muted)] shadow-lg transition-all hover:border-[var(--accent)]/40 hover:text-[var(--accent)]"
-        style={{ left: sidebarOpen ? "min(88vw, 360px)" : "0px" }}
+        className={`map-sidebar-toggle ${sidebarOpen ? "map-sidebar-toggle--open" : ""}`}
         id="sidebar-toggle"
         aria-label={sidebarOpen ? "Paneli kapat" : "Paneli aç"}
+        aria-controls="map-filter-sidebar"
+        aria-expanded={sidebarOpen}
       >
         {sidebarOpen
           ? <PanelLeftClose size={15} />
-          : <PanelLeftOpen size={15} />
+          : <SlidersHorizontal size={18} />
         }
+        {!sidebarOpen && <span className="map-sidebar-toggle-label">Filtreler</span>}
       </button>
 
       {/* ── Map ─────────────────────────────────────── */}
-      <div className="relative h-full flex-1 bg-[#2aa8c5]">
+      <div className="relative h-full flex-1 bg-[#b8c9ca]">
         <InteractiveMap
           pins={filteredPins}
           selectedPin={selectedPin}

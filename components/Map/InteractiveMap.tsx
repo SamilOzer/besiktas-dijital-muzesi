@@ -34,7 +34,7 @@ const DEFAULT_BEARING = -14;
 const PIN_SOURCE_ID = "museum-pins";
 const PIN_HALO_LAYER_ID = "museum-pin-halo";
 const PIN_LAYER_ID = "museum-pin-points";
-const PIN_CORE_LAYER_ID = "museum-pin-core";
+const PIN_ICON_LAYER_ID = "museum-pin-icons";
 const SELECTED_PIN_LAYER_ID = "museum-selected-pin";
 const CLUSTER_HALO_LAYER_ID = "museum-cluster-halo";
 const CLUSTER_LAYER_ID = "museum-clusters";
@@ -43,7 +43,7 @@ const CLUSTER_COUNT_LAYER_ID = "museum-cluster-count";
 const MAP_STYLES = {
   museum: {
     label: "Müze atlası",
-    description: "Canlı renkler ve 3D yapılar",
+    description: "Sakin tonlar ve 3D yapılar",
     url: "https://tiles.openfreemap.org/styles/liberty",
     pitch: DEFAULT_PITCH,
   },
@@ -56,6 +56,14 @@ const MAP_STYLES = {
 } as const;
 
 type MapStyleKey = keyof typeof MAP_STYLES;
+
+const PIN_ICON_IMAGES = [
+  { id: "museum-pin-statue", src: "/icons/map/statue.svg" },
+  { id: "museum-pin-crown", src: "/icons/map/crown.svg" },
+  { id: "museum-pin-building", src: "/icons/map/building.svg" },
+  { id: "museum-pin-trophy", src: "/icons/map/trophy.svg" },
+  { id: "museum-pin-church", src: "/icons/map/church.svg" },
+] as const;
 
 type PinFeatureProperties = {
   id: string;
@@ -101,7 +109,45 @@ const PIN_COLOR_EXPRESSION: maplibregl.ExpressionSpecification = [
   "#c18a38",
 ];
 
-function addPinLayers(map: MapLibreMap, pins: PinLocation[], selectedPinId: string | null) {
+const PIN_ICON_EXPRESSION: maplibregl.ExpressionSpecification = [
+  "match",
+  ["get", "category"],
+  "heykeller",
+  "museum-pin-statue",
+  "saraylar",
+  "museum-pin-crown",
+  "tarihi-yapilar",
+  "museum-pin-building",
+  "spor",
+  "museum-pin-trophy",
+  "dini-kamusal",
+  "museum-pin-church",
+  "museum-pin-building",
+];
+
+async function loadPinIconImages(map: MapLibreMap) {
+  const results = await Promise.allSettled(
+    PIN_ICON_IMAGES.map(async ({ id, src }) => {
+      if (map.hasImage(id)) return;
+
+      const image = new window.Image(48, 48);
+      image.decoding = "async";
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error(`Pin ikonu yüklenemedi: ${src}`));
+        image.src = src;
+      });
+
+      if (!map.hasImage(id)) {
+        map.addImage(id, image, { pixelRatio: 2 });
+      }
+    })
+  );
+
+  return results.every((result) => result.status === "fulfilled");
+}
+
+function addPinLayers(map: MapLibreMap, pins: PinLocation[], selectedPinId: string | null, pinIconsReady = true) {
   const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
   map.addSource(PIN_SOURCE_ID, {
@@ -119,7 +165,7 @@ function addPinLayers(map: MapLibreMap, pins: PinLocation[], selectedPinId: stri
     filter: ["has", "point_count"],
     paint: {
       "circle-color": "#ffffff",
-      "circle-opacity": 0.36,
+      "circle-opacity": 0.42,
       "circle-radius": ["step", ["get", "point_count"], isMobile ? 18 : 27, 6, isMobile ? 22 : 32, 12, isMobile ? 26 : 37],
       "circle-blur": 0.25,
     },
@@ -131,9 +177,9 @@ function addPinLayers(map: MapLibreMap, pins: PinLocation[], selectedPinId: stri
     source: PIN_SOURCE_ID,
     filter: ["has", "point_count"],
     paint: {
-      "circle-color": ["step", ["get", "point_count"], "#1d7871", 6, "#356f93", 12, "#72569a"],
+      "circle-color": "#344d55",
       "circle-radius": ["step", ["get", "point_count"], isMobile ? 13 : 20, 6, isMobile ? 16 : 25, 12, isMobile ? 20 : 30],
-      "circle-stroke-color": "rgba(255,255,255,0.96)",
+      "circle-stroke-color": "rgba(255,255,255,0.98)",
       "circle-stroke-width": isMobile ? 2 : 3,
     },
   });
@@ -163,9 +209,9 @@ function addPinLayers(map: MapLibreMap, pins: PinLocation[], selectedPinId: stri
     filter: ["!", ["has", "point_count"]],
     paint: {
       "circle-color": PIN_COLOR_EXPRESSION,
-      "circle-radius": isMobile ? 12 : 23,
-      "circle-opacity": 0.2,
-      "circle-blur": 0.3,
+      "circle-radius": isMobile ? 13 : 25,
+      "circle-opacity": 0.22,
+      "circle-blur": 0.42,
     },
   });
 
@@ -176,22 +222,26 @@ function addPinLayers(map: MapLibreMap, pins: PinLocation[], selectedPinId: stri
     filter: ["!", ["has", "point_count"]],
     paint: {
       "circle-color": PIN_COLOR_EXPRESSION,
-      "circle-radius": isMobile ? 8 : 15,
+      "circle-radius": isMobile ? 8 : 16,
       "circle-stroke-color": "rgba(255,255,255,0.98)",
       "circle-stroke-width": isMobile ? 2 : 3,
     },
   });
 
-  map.addLayer({
-    id: PIN_CORE_LAYER_ID,
-    type: "circle",
-    source: PIN_SOURCE_ID,
-    filter: ["!", ["has", "point_count"]],
-    paint: {
-      "circle-color": "rgba(255,255,255,0.94)",
-      "circle-radius": isMobile ? 2 : 3.2,
-    },
-  });
+  if (pinIconsReady) {
+    map.addLayer({
+      id: PIN_ICON_LAYER_ID,
+      type: "symbol",
+      source: PIN_SOURCE_ID,
+      filter: ["!", ["has", "point_count"]],
+      layout: {
+        "icon-image": PIN_ICON_EXPRESSION,
+        "icon-size": isMobile ? 0.4 : 0.68,
+        "icon-allow-overlap": true,
+        "icon-ignore-placement": true,
+      },
+    });
+  }
 
   map.addLayer({
     id: SELECTED_PIN_LAYER_ID,
@@ -248,69 +298,69 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
     const key = `${layer.id} ${sourceLayer}`.toLowerCase();
 
     if (layer.type === "background") {
-      setPaintSafely(map, layer.id, "background-color", isMuseum ? "#efe8da" : "#f4f6f4");
+      setPaintSafely(map, layer.id, "background-color", isMuseum ? "#e7e5df" : "#f4f6f4");
       return;
     }
 
     if (layer.type === "fill") {
       if (/water|ocean|river|lake/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#22a6c2" : "#82cad8");
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#a9c8cc" : "#c4d8dc");
         setPaintSafely(map, layer.id, "fill-opacity", 1);
-        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#14859e" : "#66b9ca");
+        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#8db3ba" : "#acc8cd");
       } else if (/beach|sand/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#ead29d" : "#efe4c8");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.95);
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#ddd7ca" : "#ece6d8");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.9);
       } else if (/park|wood|forest|grass|garden|nature|green/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#96c875" : "#d6e6c8");
-        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#77ae5c" : "#bfd6ae");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.94);
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#c5cfc0" : "#dde5d8");
+        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#adbba7" : "#cbd7c5");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.86);
       } else if (/pitch|stadium|sport/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#9ed1aa" : "#d5e8d9");
-        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#6eae81" : "#b8d6c0");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.92);
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#c3cec5" : "#dce6de");
+        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#aab9ad" : "#c8d6cb");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.86);
       } else if (/hospital|medical/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#f0d3d0" : "#f3e5e3");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.88);
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#ddd8d3" : "#eeeae7");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.82);
       } else if (/school|university|college/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#eadcaa" : "#eee8d0");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.88);
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#ddd9cf" : "#eeeae0");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.82);
       } else if (/building/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#d7cab9" : "#e8ece9");
-        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#afa291" : "#c8d2cd");
-        setPaintSafely(map, layer.id, "fill-opacity", isMuseum ? 0.92 : 0.62);
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#d1cec7" : "#e8ece9");
+        setPaintSafely(map, layer.id, "fill-outline-color", isMuseum ? "#b8b4ab" : "#c8d2cd");
+        setPaintSafely(map, layer.id, "fill-opacity", isMuseum ? 0.86 : 0.62);
       } else if (/commercial|retail/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#efd7c7" : "#f0e8e2");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.78);
-      } else if (/industrial/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#dcd5e8" : "#e8e5ec");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.78);
-      } else if (/residential/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#ede4d6" : "#eef1ef");
-        setPaintSafely(map, layer.id, "fill-opacity", 0.8);
-      } else if (/landuse|landcover/.test(key)) {
-        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#e5dfd1" : "#eef1ef");
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#dedad3" : "#f0e8e2");
         setPaintSafely(map, layer.id, "fill-opacity", 0.72);
+      } else if (/industrial/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#d7d5d1" : "#e8e5ec");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.7);
+      } else if (/residential/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#e2e0da" : "#eef1ef");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.72);
+      } else if (/landuse|landcover/.test(key)) {
+        setPaintSafely(map, layer.id, "fill-color", isMuseum ? "#deddd6" : "#eef1ef");
+        setPaintSafely(map, layer.id, "fill-opacity", 0.66);
       }
       return;
     }
 
     if (layer.type === "line") {
       if (/water|river|stream|canal/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#168aa5" : "#6bc9db");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#8db5bc" : "#9fc9d0");
       } else if (/motorway|trunk/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#b86c2e" : "#cfab58");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#baa77d" : "#cfbd91");
       } else if (/primary/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#d49a45" : "#e1c983");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#d2c6ad" : "#e1d6bb");
       } else if (/secondary|tertiary/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#e5c47b" : "#f1e5c3");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#ebe6dd" : "#f1ede4");
       } else if (/rail/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#876d6a" : "#9ba3a0");
-        setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.72 : 0.48);
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#858783" : "#9ba3a0");
+        setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.52 : 0.48);
       } else if (/road|street|transportation/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#fffaf0" : "#f8f5ee");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#faf9f5" : "#f8f5ee");
       } else if (/boundary|admin/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#777f78" : "#a9b0a4");
-        setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.58 : 0.42);
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#8b918c" : "#a9b0a4");
+        setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.4 : 0.42);
       }
       return;
     }
@@ -322,17 +372,17 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
       }
 
       if (/water/.test(key)) {
-        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#086f88" : "#147e99");
+        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#527f87" : "#5e8a93");
         setPaintSafely(map, layer.id, "text-halo-color", "rgba(255,255,255,0.75)");
       } else if (/park|wood|forest|garden/.test(key)) {
-        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#3f763b" : "#5d7856");
-        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#edf3e5" : "#f7faf8");
+        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#66745f" : "#6d7e67");
+        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#edf0e9" : "#f7faf8");
       } else if (/road|street/.test(key)) {
-        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#6a5c4f" : "#6c726e");
-        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#fffaf0" : "#f7faf8");
+        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#65625d" : "#6c726e");
+        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#faf9f5" : "#f7faf8");
       } else {
-        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#253944" : "#334b56");
-        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#f7f1e6" : "#f7faf8");
+        setPaintSafely(map, layer.id, "text-color", isMuseum ? "#34464c" : "#334b56");
+        setPaintSafely(map, layer.id, "text-halo-color", isMuseum ? "#f2f1ed" : "#f7faf8");
       }
       setPaintSafely(map, layer.id, "text-halo-width", 1.35);
       setPaintSafely(map, layer.id, "text-halo-blur", 0.35);
@@ -355,7 +405,7 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
         type: "fill-extrusion",
         minzoom: 12.7,
         paint: {
-          "fill-extrusion-color": ["interpolate", ["linear"], ["zoom"], 12.7, "#e5d8c7", 16, "#ae9676"],
+          "fill-extrusion-color": ["interpolate", ["linear"], ["zoom"], 12.7, "#dad6cf", 16, "#aaa59c"],
           "fill-extrusion-height": [
             "interpolate",
             ["linear"],
@@ -428,9 +478,10 @@ export default function InteractiveMap({
       ],
     });
 
-    const handleStyleLoad = () => {
+    const handleStyleLoad = async () => {
       applyMuseumPalette(map, mapStyleRef.current);
-      addPinLayers(map, pinsRef.current, selectedPinIdRef.current);
+      const pinIconsReady = await loadPinIconImages(map);
+      addPinLayers(map, pinsRef.current, selectedPinIdRef.current, pinIconsReady);
       setMapReady(true);
     };
     const handleZoom = () => setZoomLevel(Math.round(map.getZoom() * 10) / 10);
@@ -563,7 +614,7 @@ export default function InteractiveMap({
     });
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#24a8c6]">
+    <div className="relative h-full w-full overflow-hidden bg-[#b8c9ca]">
       <div ref={mapContainerRef} id="besiktas-interactive-map" className="absolute inset-0 h-full w-full" />
 
       {!mapReady && (

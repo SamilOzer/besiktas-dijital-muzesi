@@ -12,20 +12,20 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
 
           {/* ─── Brand ─── */}
-          <div className="md:col-span-2">
-            <Link href="/" className="inline-block mb-5">
+          <div className="text-center md:col-span-2 md:text-left">
+            <Link href="/" className="mx-auto mb-5 block w-fit md:mx-0">
               <Image
                 src="/besiktas-belediyesi-logo.png"
                 alt="Beşiktaş Belediyesi"
                 width={200}
                 height={60}
-                className="h-12 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity"
+                className="h-6 w-auto object-contain opacity-70 transition-opacity hover:opacity-100 md:h-12"
               />
             </Link>
             <p className="text-[var(--accent)] text-xs font-semibold tracking-[0.15em] uppercase mb-3">
               Dijital Müze Platformu · Kent Belleği Dijital Arşiv
             </p>
-            <p className="text-sm text-[var(--muted)] leading-relaxed max-w-sm">
+            <p className="mx-auto max-w-sm text-sm leading-relaxed text-[var(--muted)] md:mx-0">
               Beşiktaş&apos;ın tarihi ve kültürel mirasını interaktif dijital arşivle
               geleceğe taşıyoruz.
             </p>
@@ -52,9 +52,9 @@ export default function Footer() {
           </div>
 
           {/* ─── Sayfalar ─── */}
-          <div>
+          <div className="text-center md:text-left">
             <p className="eyebrow mb-4">Sayfalar</p>
-            <ul className="space-y-2">
+            <ul className="flex items-center justify-center gap-2 whitespace-nowrap md:block md:space-y-2">
               {[
                 { href: "/",            label: "Anasayfa" },
                 { href: "/harita",      label: "Kültür Haritası" },
@@ -65,7 +65,7 @@ export default function Footer() {
                 <li key={href}>
                   <Link
                     href={href}
-                    className="text-sm text-[var(--muted)] hover:text-[var(--accent)] transition-colors duration-200"
+                    className="text-[11px] text-[var(--muted)] transition-colors duration-200 hover:text-[var(--accent)] md:text-sm"
                   >
                     {label}
                   </Link>

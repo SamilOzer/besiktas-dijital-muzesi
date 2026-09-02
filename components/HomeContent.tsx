@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowRight,
   Map,
@@ -187,18 +186,6 @@ export default function HomeContent() {
 
         {/* Hero Content */}
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-24 pb-20">
-          {/* Beşiktaş Belediyesi logo — large centered */}
-          <div className="mb-10 animate-fade-up">
-            <Image
-              src="/besiktas-belediyesi-logo.png"
-              alt="Beşiktaş Belediyesi"
-              width={280}
-              height={84}
-              className="h-16 md:h-20 w-auto object-contain mx-auto opacity-70"
-              priority
-            />
-          </div>
-
           <div className="animate-fade-up" style={{ animationDelay: "0.15s" }}>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/5 mb-8">
               <Sparkles size={14} className="text-[var(--accent)]" />
@@ -267,7 +254,7 @@ export default function HomeContent() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-20">
             <p className="eyebrow mb-4">Dijital Arşiv</p>
-            <h2 className="headline-md">
+            <h2 className="headline-md home-section-title">
               Rakamlarla
               <br />
               <span className="gradient-text">Kültürel Miras</span>
@@ -324,7 +311,7 @@ export default function HomeContent() {
               }`}
             >
               <p className="eyebrow mb-4">Kültürel Katmanlar</p>
-              <h2 className="headline-md mb-8">
+              <h2 className="headline-md home-section-title mb-8">
                 Tarihin ve Sanatın
                 <br />
                 <span className="gradient-text">Kesişim Noktası</span>
@@ -436,7 +423,7 @@ export default function HomeContent() {
           }`}
         >
           <p className="eyebrow mb-6">Keşfe Başla</p>
-          <h2 className="headline mb-10">
+          <h2 className="headline home-section-title mb-10">
             Beşiktaş Kültür
             <br />
             <span className="gradient-text">Haritasını Aç</span>
