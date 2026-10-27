@@ -136,7 +136,7 @@ export default function KatkilarAdminPage() {
         date: target.eventDate || "",
         era: target.era || "Cumhuriyet Dönemi",
         category: (target.eventCategory as any) || "toplumsal",
-        categoryLabel: target.eventCategory || "Toplumsal",
+        categoryLabel: target.eventCategory === "diger" ? target.eventCategoryLabel?.trim() || "Diğer" : target.eventCategory || "Toplumsal",
         summary: target.eventSummary || "",
         fullText: target.eventDescription || target.eventSummary || "",
         location: target.eventLocation || "",
@@ -502,7 +502,11 @@ export default function KatkilarAdminPage() {
                         <option value="toplumsal">Toplumsal</option>
                         <option value="spor">Spor</option>
                         <option value="mimari">Mimari</option>
+                        <option value="diger">Diğer</option>
                       </select>
+                      {editForm.eventCategory === "diger" && <label className="mt-3 block text-sm">Kategori açıklaması
+                        <input value={editForm.eventCategoryLabel || ""} maxLength={80} onChange={e => setEditForm({ ...editForm, eventCategoryLabel: e.target.value })} className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white" />
+                      </label>}
                     </div>
                   </div>
 

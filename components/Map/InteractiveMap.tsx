@@ -410,13 +410,13 @@ function applyMuseumPalette(map: MapLibreMap, styleKey: MapStyleKey) {
         setPaintSafely(map, layer.id, "line-color", isMuseum ? "#626e78" : "#9ba3a0");
         setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.68 : 0.48);
       } else if (/path|footway|cycleway|pedestrian|track/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#9bb7b0" : "#edf0ee");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#c6bda9" : "#edf0ee");
         setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.66 : 0.7);
       } else if (/minor|residential|service|living|street/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#5aaed1" : "#edf0ee");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#b7b1a6" : "#edf0ee");
         setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.78 : 0.7);
       } else if (/road|street|transportation/.test(key)) {
-        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#75b9d5" : "#f8f5ee");
+        setPaintSafely(map, layer.id, "line-color", isMuseum ? "#f5f2eb" : "#f8f5ee");
       } else if (/boundary|admin/.test(key)) {
         setPaintSafely(map, layer.id, "line-color", isMuseum ? "#8b918c" : "#a9b0a4");
         setPaintSafely(map, layer.id, "line-opacity", isMuseum ? 0.4 : 0.42);
@@ -685,16 +685,16 @@ export default function InteractiveMap({
       {!mapReady && (
         <div className="pointer-events-none absolute inset-0 z-[8] flex items-center justify-center bg-[#edf3ef]">
           <div className="flex items-center gap-3 rounded-2xl border border-slate-900/10 bg-white/90 px-5 py-3 text-slate-700 shadow-xl">
-            <Sparkles size={17} className="animate-pulse text-[#b17e32]" />
-            <span className="text-xs font-semibold">Vektör atlas hazırlanıyor</span>
+            <Sparkles size={17} className="animate-pulse text-[var(--accent)]" />
+            <span className="text-xs font-semibold">Harita hazırlanıyor</span>
           </div>
         </div>
       )}
 
-      <div className="pointer-events-none absolute left-5 top-5 z-[10] hidden w-[270px] overflow-hidden rounded-2xl border border-slate-900/10 bg-white/92 shadow-xl backdrop-blur-xl sm:block">
+      <div className="map-legend pointer-events-none absolute left-5 top-5 z-[10] hidden w-[270px] overflow-hidden rounded-2xl border border-slate-900/10 bg-white/92 shadow-xl backdrop-blur-xl sm:block">
         <div className="border-b border-slate-900/8 px-4 py-3">
-          <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.17em] text-[#a06f28]">
-            <Compass size={13} /> 3D kültür atlası
+          <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.17em] text-[var(--accent)]">
+            <Compass size={13} /> Beşiktaş kültür atlası
           </span>
           <span className="mt-1 block text-xs font-semibold text-slate-800">Beşiktaş · {pins.length} kültür noktası</span>
         </div>
@@ -729,7 +729,7 @@ export default function InteractiveMap({
           </div>
 
           <div className="min-w-0 flex-1 px-3 py-1.5 sm:px-4 sm:py-2">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] sm:text-[10px] sm:tracking-[0.15em]">Seçili kültür noktası</p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)] sm:text-[10px] sm:tracking-[0.15em]">Seçili mekân</p>
             <h2 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-white sm:text-[16px]">{selectedPin.title}</h2>
             <p className="mt-1 truncate text-[11px] text-white/50">{selectedPin.categoryLabel} · {selectedPin.era}</p>
             <button
@@ -737,7 +737,7 @@ export default function InteractiveMap({
               onClick={() => onOpenPin(selectedPin)}
               className="mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-[var(--accent)] px-3 py-2 text-[11px] font-semibold text-[#11161c] transition-colors hover:bg-[#dfbd73] sm:mt-3 sm:gap-2 sm:px-3.5"
             >
-              Detayı Gör <ArrowRight size={13} />
+              Hikâyeyi keşfet <ArrowRight size={13} />
             </button>
           </div>
 

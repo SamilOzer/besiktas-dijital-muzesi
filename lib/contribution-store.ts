@@ -20,6 +20,7 @@ export interface Contribution {
   eventDate?: string;
   era?: string;
   eventCategory?: string;
+  eventCategoryLabel?: string;
   eventSummary?: string;
   eventDescription?: string;
   eventLocation?: string;

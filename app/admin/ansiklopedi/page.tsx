@@ -25,7 +25,7 @@ const olaySchema = z.object({
   title: z.string().trim().min(2, 'Başlık en az 2 karakter olmalıdır'),
   date: z.string().trim().min(1, 'Tarih bilgisi girilmesi zorunludur'),
   era: z.string().trim().min(1, 'Dönem bilgisi girilmesi zorunludur'),
-  category: z.enum(['siyasi','askeri','kulturel','toplumsal','spor','mimari'], {
+  category: z.enum(['siyasi','askeri','kulturel','toplumsal','spor','mimari','diger'], {
     errorMap: () => ({ message: 'Geçerli bir kategori seçiniz' })
   }),
   categoryLabel: z.string().optional(),
@@ -44,6 +44,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   toplumsal: 'Toplumsal',
   spor: 'Spor',
   mimari: 'Mimari',
+  diger: 'Diğer',
 };
 
 export default function AnsiklopediPage() {
@@ -115,7 +116,7 @@ export default function AnsiklopediPage() {
     const tagsArray = (data.tags || '').split(',').map(t => t.trim()).filter(Boolean);
     const validImages = data.images?.filter(img => img.trim() !== '') || [];
     const primaryImage = validImages[0] || '';
-    const catLabel = CATEGORY_LABELS[data.category] || 'Toplumsal';
+    const catLabel = data.categoryLabel?.trim() || CATEGORY_LABELS[data.category] || 'Toplumsal';
 
     const descriptionText = data.description || data.summary || '';
 
@@ -217,6 +218,7 @@ export default function AnsiklopediPage() {
               <option value="toplumsal">Toplumsal</option>
               <option value="spor">Spor</option>
               <option value="mimari">Mimari</option>
+              <option value="diger">Diğer</option>
             </select>
 
             {/* Era Filter */}
@@ -341,6 +343,7 @@ export default function AnsiklopediPage() {
                                 toplumsal: "Toplumsal Yaşam",
                                 spor: "Spor Tarihi",
                                 mimari: "Mimari Miras",
+                                diger: "Diğer",
                               };
                               setValue("categoryLabel", labels[val] || "Tarihi Olay");
                             }}
@@ -355,6 +358,7 @@ export default function AnsiklopediPage() {
                               <SelectItem value="toplumsal">Toplumsal Yaşam</SelectItem>
                               <SelectItem value="spor">Spor Tarihi</SelectItem>
                               <SelectItem value="mimari">Mimari Miras</SelectItem>
+                              <SelectItem value="diger">Diğer</SelectItem>
                             </SelectContent>
                           </Select>
                         )}

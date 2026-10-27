@@ -20,7 +20,8 @@ export type EventCategory =
   | "kulturel"
   | "toplumsal"
   | "spor"
-  | "mimari";
+  | "mimari"
+  | "diger";
 
 export const ansiklopediData: HistoricalEvent[] = [
   {

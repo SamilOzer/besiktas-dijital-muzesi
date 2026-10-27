@@ -156,6 +156,15 @@ export default function ImageUploadInput({
       {tab === "file" ? (
         <div
           onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Fotoğraf seç"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragEnter={handleDragEnter}
@@ -186,6 +195,7 @@ export default function ImageUploadInput({
         <div className="flex gap-2">
           <input
             type="url"
+            aria-label="Fotoğraf bağlantısı"
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             placeholder="https://örnek.com/fotograf.jpg"

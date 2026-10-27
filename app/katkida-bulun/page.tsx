@@ -1,254 +1,83 @@
 "use client";
-
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { addContribution } from "@/lib/contribution-store";
+import { NEIGHBORHOODS, TIME_PERIODS } from "@/data/besiktasPinData";
 import ImageUploadInput from "@/components/ImageUploadInput";
 
-const NEIGHBORHOODS = [
-  "Abbasağa", "Akatlar", "Arnavutköy", "Balmumcu", "Bebek", "Cihannüma", 
-  "Dikilitaş", "Etiler", "Gayrettepe", "Konaklar", "Kuruçeşme", "Kültür", 
-  "Levazım", "Levent", "Mecidiye", "Muradiye", "Nisbetiye", "Ortaköy", 
-  "Sinanpaşa", "Türkali", "Ulus", "Vişnezade", "Yıldız"
-];
-
-const ENCYCLOPEDIA_CATEGORIES = [
-  "siyasi", "askeri", "kulturel", "toplumsal", "spor", "mimari"
-];
-
+const eventCategories = [["siyasi", "Siyasi"], ["askeri", "Askeri"], ["kulturel", "Kültürel"], ["toplumsal", "Toplumsal"], ["spor", "Spor"], ["mimari", "Mimari"], ["diger", "Diğer"]];
 export default function KatkidaBulunPage() {
   const [type, setType] = useState<"harita" | "ansiklopedi">("harita");
   const [success, setSuccess] = useState(false);
-  const [images, setImages] = useState<string[]>([""]);
-
+  const [eventCategory, setEventCategory] = useState("");
+  const successRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (success) {
+      successRef.current?.focus({ preventScroll: true });
+      successRef.current?.scrollIntoView({ block: "center", behavior: "instant" });
+    }
+  }, [success]);
+  const [images, setImages] = useState<string[]>([]);
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
-    
+    const data = Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>;
     addContribution({
-      type,
-      submitterName: data.submitterName as string,
-      submitterEmail: data.submitterEmail as string,
+      type, submitterName: data.submitterName, submitterEmail: data.submitterEmail,
       ...(type === "harita" ? {
-        title: data.title as string,
-        category: data.category as string,
-        timePeriod: data.timePeriod as string,
-        neighborhood: data.neighborhood as string,
-        address: data.address as string,
-        summary: data.summary as string,
-        description: data.description as string,
-        coordinates: [parseFloat(data.lat as string) || 0, parseFloat(data.lng as string) || 0],
+        title: data.title, category: data.category, timePeriod: data.timePeriod, neighborhood: data.neighborhood,
+        address: data.address, summary: data.summary, description: data.description,
+        coordinates: [parseFloat(data.lat) || 0, parseFloat(data.lng) || 0] as [number, number],
         imageUrls: images.filter(Boolean),
       } : {
-        eventTitle: data.title as string,
-        eventDate: data.date as string,
-        era: data.era as string,
-        eventCategory: data.eventCategory as string,
-        eventSummary: data.summary as string,
-        eventDescription: data.description as string,
-        eventLocation: data.location as string,
-        tags: (data.tags as string).split(",").map(t => t.trim()).filter(Boolean),
-        imageUrls: images.filter(Boolean),
-      })
+        eventTitle: data.title, eventDate: data.date, era: data.era, eventCategory: data.eventCategory,
+        eventCategoryLabel: data.eventCategory === "diger" ? data.eventCategoryLabel.trim() : undefined,
+        eventSummary: data.summary, eventDescription: data.description, eventLocation: data.location,
+        tags: (data.tags || "").split(",").map(t => t.trim()).filter(Boolean), imageUrls: images.filter(Boolean),
+      }),
     });
-    
     setSuccess(true);
     e.currentTarget.reset();
-    setImages([""]);
-    setTimeout(() => setSuccess(false), 5000);
+    setImages([]);
+    setEventCategory("");
   };
-
-  const inputClass = "w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all [&>option]:bg-[#14161d] [&>option]:text-white";
-  const labelClass = "block text-sm font-medium text-white/80 mb-1.5";
-
-  return (
-    <div className="min-h-screen pt-24 pb-12 px-6">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-white mb-4">Müzeye Katkıda Bulun</h1>
-          <p className="text-white/60">
-            Beşiktaş&apos;ın tarihine dair mekanları veya olayları ekleyerek dijital müzemizin büyümesine yardımcı olun.
-          </p>
-        </div>
-
-        {success && (
-          <div className="mb-8 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-center backdrop-blur-md">
-            Katkınız başarıyla alındı. Editörlerimiz tarafından incelendikten sonra yayına alınacaktır. Teşekkür ederiz!
-          </div>
-        )}
-
-        <div className="bg-[#12141a]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl">
-          <div className="flex gap-4 mb-8">
-            <button
-              onClick={() => setType("harita")}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
-                type === "harita" 
-                  ? "bg-[var(--accent)] text-[#0d0e12] shadow-lg shadow-[var(--accent)]/20" 
-                  : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              Harita (Mekan) Ekle
-            </button>
-            <button
-              onClick={() => setType("ansiklopedi")}
-              className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
-                type === "ansiklopedi" 
-                  ? "bg-[var(--accent)] text-[#0d0e12] shadow-lg shadow-[var(--accent)]/20" 
-                  : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              Ansiklopedi (Olay) Ekle
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className={labelClass}>Adınız Soyadınız *</label>
-                <input required type="text" name="submitterName" className={inputClass} placeholder="Örn: Ahmet Yılmaz" />
-              </div>
-              <div>
-                <label className={labelClass}>E-posta Adresiniz *</label>
-                <input required type="email" name="submitterEmail" className={inputClass} placeholder="Örn: ahmet@example.com" />
-              </div>
-            </div>
-
-            <hr className="border-white/10 my-6" />
-
-            {type === "harita" ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={labelClass}>Mekan Adı *</label>
-                    <input required type="text" name="title" className={inputClass} placeholder="Örn: Tarihi İskele" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Kategori *</label>
-                    <select required name="category" className={inputClass}>
-                      <option value="tarihi-yapilar">Tarihi Evler &amp; Yapılar</option>
-                      <option value="heykeller">Heykeller &amp; Anıtlar</option>
-                      <option value="saraylar">Saraylar &amp; Kasırlar</option>
-                      <option value="spor">Stadyum &amp; Spor Tarihi</option>
-                      <option value="dini-kamusal">Dini &amp; Kamusal Yapılar</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={labelClass}>Mahalle *</label>
-                    <select required name="neighborhood" className={inputClass}>
-                      <option value="">Seçiniz...</option>
-                      {NEIGHBORHOODS.map(n => <option key={n} value={n}>{n}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Dönem *</label>
-                    <select required name="timePeriod" className={inputClass}>
-                      <option value="1400-1600">1400-1600 (Osmanlı Klasik)</option>
-                      <option value="1600-1800">1600-1800 (Osmanlı Orta)</option>
-                      <option value="1800-1850">1800-1850 (Erken Tanzimat)</option>
-                      <option value="1850-1900">1850-1900 (Tanzimat &amp; Hamidiye)</option>
-                      <option value="1900-1960">1900-1960 (Meşrutiyet &amp; Cumhuriyet)</option>
-                      <option value="1960-gunumuz">1960-Günümüz</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Açık Adres</label>
-                  <input type="text" name="address" className={inputClass} placeholder="Açık adres..." />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={labelClass}>Enlem (Latitude)</label>
-                    <input type="number" step="any" name="lat" className={inputClass} placeholder="Örn: 41.0422" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Boylam (Longitude)</label>
-                    <input type="number" step="any" name="lng" className={inputClass} placeholder="Örn: 29.0067" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Fotoğraflar</label>
-                  <ImageUploadInput
-                    images={images}
-                    onChange={setImages}
-                    darkStyle
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={labelClass}>Olay Başlığı *</label>
-                    <input required type="text" name="title" className={inputClass} placeholder="Örn: BJK Kuruluşu" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Kategori *</label>
-                    <select required name="eventCategory" className={inputClass}>
-                      <option value="">Seçiniz...</option>
-                      {ENCYCLOPEDIA_CATEGORIES.map(c => (
-                        <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className={labelClass}>Tarih *</label>
-                    <input required type="text" name="date" className={inputClass} placeholder="Örn: 1903 veya 3 Mart 1924" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Dönem</label>
-                    <input type="text" name="era" className={inputClass} placeholder="Örn: 20. Yüzyıl" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Etiketler</label>
-                  <input type="text" name="tags" className={inputClass} placeholder="Virgülle ayırarak yazın (Örn: spor, kulüp, jimnastik)" />
-                </div>
-                
-                <div>
-                  <label className={labelClass}>Konum/Mekan İlişkisi</label>
-                  <input type="text" name="location" className={inputClass} placeholder="Olayın geçtiği mekan (varsa)" />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Fotoğraflar</label>
-                  <ImageUploadInput
-                    images={images}
-                    onChange={setImages}
-                    darkStyle
-                  />
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className={labelClass}>Kısa Özet *</label>
-              <textarea required name="summary" rows={2} className={`${inputClass} resize-none`} placeholder="Birkaç cümlelik özet..." />
-            </div>
-
-            <div>
-              <label className={labelClass}>Detaylı Açıklama</label>
-              <textarea name="description" rows={5} className={`${inputClass} resize-y`} placeholder="Tüm detayları buraya yazabilirsiniz..." />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-4 bg-[var(--accent)] text-[#0d0e12] rounded-xl font-bold text-lg hover:brightness-110 active:scale-[0.98] transition-all"
-            >
-              Gönder
-            </button>
-          </form>
-        </div>
-      </div>
+  return <main id="main-content" className="interior-page museum-container">
+    <div className="breadcrumb"><Link href="/">Ana sayfa</Link><span>/</span><span>Katkıda bulun</span></div>
+    <div className="form-layout">
+      <section className="form-intro"><h1>Bir hatıra da<br />sizden kalsın.</h1><p>Bildikleriniz, gördükleriniz, sakladıklarınız… Beşiktaş’ın ortak hafızasına küçük bir iz bırakın.</p>
+        <div className="form-note"><h2>Neler paylaşabilirsiniz?</h2><p>Tarihi bir mekânı tanıtabilir, semtin geçmişinden bir olayı anlatabilir veya kendi arşivinizden fotoğraflar ekleyebilirsiniz.</p></div>
+        <div className="form-note"><h2>Paylaştıktan sonra</h2><p>Katkılar, yayımlanmadan önce editörler tarafından incelenir. Bildiğiniz kaynakları açıklama alanına eklemeniz bu sürece yardımcı olur.</p></div>
+      </section>
+      <section className="museum-form">
+        <h2>Hikâyenizi paylaşın</h2>
+        {success ? <div ref={successRef} tabIndex={-1} role="status" className="success-message"><CheckCircle2 size={25} className="mb-3" /><p>Katkınız kaydedildi. İncelenmek üzere bekleyen katkılar arasına eklendi. Teşekkür ederiz.</p><button className="text-link mt-3" onClick={() => setSuccess(false)}>Yeni katkı ekleyin</button></div> : <>
+        <div className="form-tabs" role="group" aria-label="Katkı türü"><button aria-pressed={type === "harita"} onClick={() => setType("harita")}>Bir mekân ekleyin</button><button aria-pressed={type === "ansiklopedi"} onClick={() => setType("ansiklopedi")}>Bir olay anlatın</button></div>
+        <form onSubmit={handleSubmit} className="form-fields">
+          <p className="form-caption">* işaretli alanların doldurulması gerekir.</p>
+          <div className="form-row"><label className="field"><span>Adınız ve soyadınız *</span><input name="submitterName" autoComplete="name" required placeholder="Adınız ve soyadınız" /></label><label className="field"><span>E-posta adresiniz *</span><input name="submitterEmail" autoComplete="email" type="email" required placeholder="ornek@eposta.com" /></label></div>
+          <hr className="form-divider" />
+          {type === "harita" ? <>
+            <label className="field"><span>Mekânın adı *</span><input name="title" required placeholder="Örneğin: Tarihi Beşiktaş İskelesi" /></label>
+            <div className="form-row"><label className="field"><span>Kategori *</span><select name="category" required><option value="tarihi-yapilar">Tarihi evler ve yapılar</option><option value="heykeller">Heykeller ve anıtlar</option><option value="saraylar">Saraylar ve kasırlar</option><option value="spor">Stadyum ve spor tarihi</option><option value="dini-kamusal">Dini ve kamusal yapılar</option></select></label>
+              <label className="field"><span>Mahalle *</span><select name="neighborhood" required defaultValue=""><option value="" disabled>Mahalle seçin</option>{NEIGHBORHOODS.filter(n => n.id !== "all").map(n => <option key={n.id} value={n.id}>{n.label}</option>)}</select></label></div>
+            <label className="field"><span>Tarihi dönem *</span><select name="timePeriod" required>{TIME_PERIODS.filter(t => t.id !== "all").map(t => <option key={t.id} value={t.id}>{t.range} — {t.label}</option>)}</select></label>
+            <label className="field"><span>Açık adres</span><input name="address" placeholder="Mahalle, sokak ve bina bilgisi" /></label>
+            <div className="form-row"><label className="field"><span>Enlem (varsa)</span><input name="lat" type="number" step="any" min="-90" max="90" placeholder="41.0422" /></label><label className="field"><span>Boylam (varsa)</span><input name="lng" type="number" step="any" min="-180" max="180" placeholder="29.0067" /></label></div>
+          </> : <>
+            <label className="field"><span>Olayın başlığı *</span><input name="title" required placeholder="Anlatmak istediğiniz olay" /></label>
+            <div className="form-row"><label className="field"><span>Kategori *</span><select name="eventCategory" required value={eventCategory} onChange={e => setEventCategory(e.target.value)}><option value="" disabled>Kategori seçin</option>{eventCategories.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label><label className="field"><span>Tarih *</span><input name="date" required placeholder="Örneğin: 1903" /></label></div>
+            {eventCategory === "diger" && <label className="field"><span>Kategoriyi belirtin *</span><input name="eventCategoryLabel" required pattern=".*\S.*" maxLength={80} placeholder="Örneğin: Denizcilik tarihi" title="Lütfen kategori adını yazın." /></label>}
+            <label className="field"><span>Dönem</span><input name="era" placeholder="Örneğin: Cumhuriyet Dönemi" /></label>
+            <label className="field"><span>Olayın geçtiği yer</span><input name="location" placeholder="Mekân veya mahalle adı" /></label>
+            <label className="field"><span>Etiketler</span><input name="tags" placeholder="Virgülle ayırın: spor, kulüp, jimnastik" /></label>
+          </>}
+          <label className="field"><span>Kısa özet *</span><textarea name="summary" required rows={3} placeholder="Hikâyeyi birkaç cümleyle anlatın." /></label>
+          <label className="field"><span>Ayrıntılar ve kaynaklar</span><textarea name="description" rows={5} placeholder="Bildiklerinizi ve varsa yararlandığınız kaynakları ekleyin." /></label>
+          <div className="field museum-upload"><span>Fotoğraflar</span><ImageUploadInput images={images} onChange={setImages} /></div>
+          <button type="submit" className="museum-button">Katkıyı gönder <ArrowUpRight size={18} aria-hidden="true" /></button>
+        </form>
+        </>}
+      </section>
     </div>
-  );
+  </main>;
 }

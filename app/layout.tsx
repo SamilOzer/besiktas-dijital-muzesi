@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
+import "./museum.css";
 
 export const metadata: Metadata = {
   title: "Beşiktaş Dijital Müzesi | Beşiktaş Belediyesi & Kültür Bilincini Geliştirme Vakfı",
@@ -24,24 +25,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" className="dark">
+    <html lang="tr">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;650;700;800&display=swap"
           rel="stylesheet"
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
-              window.scrollTo(0, 0);
-            `,
-          }}
-        />
       </head>
-      <body className="bg-[var(--bg)] text-[var(--ink)] font-sans antialiased selection:bg-[#c5a059]/30">
+      <body>
         <Header />
         {children}
         <Footer />

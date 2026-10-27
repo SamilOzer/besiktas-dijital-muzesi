@@ -1,0 +1,414 @@
+{
+  "meta": {
+    "name": "Beşiktaş — Yaşayan kent hafızası",
+    "description": "Proposed identity for the existing city museum; not extracted from an external design.",
+    "source_references": [
+      "public/images/map/ortakoy-mosque.webp",
+      "public/images/map/dolmabahce-palace.webp",
+      "public/images/map/yildiz-palace.webp"
+    ],
+    "created_at": "2026-10-26",
+    "evidence": [
+      {
+        "field": "design_system, design_style, visual_effects",
+        "reference": "Project brief and existing photographs",
+        "method": "proposed",
+        "confidence": "high",
+        "notes": "All tokens are design decisions. Photographs were visually inspected; no palette measurement or external reference matching is claimed."
+      },
+      {
+        "field": "design_system.typography",
+        "reference": "User browser comments 1–7, 2026-10-26",
+        "method": "proposed revision",
+        "confidence": "high",
+        "notes": "Replaces thin serif, strengthens filter type and borders, separates neutral roads from blue water, diversifies photography."
+      }
+    ]
+  },
+  "design_system": {
+    "color": {
+      "palette_type": "analogous",
+      "primary": {
+        "hex": "#123D50",
+        "role": "Bosphorus ink: headings, primary actions, story panel"
+      },
+      "secondary": {
+        "hex": "#E6EFF2",
+        "role": "Coastal blue supporting surfaces"
+      },
+      "accent": {
+        "hex": "#246A85",
+        "role": "Links and keyboard focus"
+      },
+      "neutral": {
+        "scale": [
+          "#FFFFFF",
+          "#F8FAFA",
+          "#CBD8DD",
+          "#526771",
+          "#123D50"
+        ],
+        "usage": "Surfaces, dividers and readable text"
+      },
+      "semantic": {
+        "success": "#21573A",
+        "warning": null,
+        "error": null,
+        "info": "#246A85"
+      },
+      "surface": {
+        "background": "#F8FAFA",
+        "card": "#FFFFFF",
+        "elevated": "#F8FAFA"
+      },
+      "contrast_strategy": "Dark blue on light surfaces; white on solid blue, captions on opaque plates."
+    },
+    "typography": {
+      "type_scale": {
+        "display": {
+          "size": "clamp(64px, 7.2vw, 112px)",
+          "weight": 650,
+          "line_height": 1.02,
+          "tracking": "-0.055em"
+        },
+        "heading_1": {
+          "size": "clamp(40px, 5vw, 72px)",
+          "weight": 600,
+          "line_height": 1.08,
+          "tracking": "-0.045em"
+        },
+        "heading_2": {
+          "size": "clamp(34px, 4vw, 58px)",
+          "weight": 600,
+          "line_height": 1.08,
+          "tracking": "-0.04em"
+        },
+        "heading_3": {
+          "size": "26px",
+          "weight": 400,
+          "line_height": 1.2,
+          "tracking": "0em"
+        },
+        "body": {
+          "size": "16px",
+          "weight": 400,
+          "line_height": 1.9,
+          "tracking": "0em"
+        },
+        "body_small": {
+          "size": "14px",
+          "weight": 400,
+          "line_height": 1.85,
+          "tracking": "0em"
+        },
+        "caption": {
+          "size": "13px",
+          "weight": 400,
+          "line_height": 1.7,
+          "tracking": "0em"
+        },
+        "overline": {
+          "size": "12px",
+          "weight": 600,
+          "line_height": 1.5,
+          "tracking": "0em"
+        }
+      },
+      "font_families": {
+        "heading": "DM Sans, system-ui, sans-serif",
+        "body": "DM Sans, system-ui, sans-serif",
+        "mono": null
+      },
+      "font_style_notes": "Single readable sans family, stronger headings and 14–16px filter controls; revised from user feedback."
+    },
+    "spacing": {
+      "base_unit": "4px",
+      "scale": [
+        "4px",
+        "8px",
+        "12px",
+        "20px",
+        "24px",
+        "32px",
+        "48px",
+        "64px",
+        "104px"
+      ],
+      "content_density": "spacious",
+      "section_rhythm": "Generous exhibition spaces; compact map controls."
+    },
+    "layout": {
+      "grid_system": "CSS Grid and flex",
+      "max_content_width": "1280px",
+      "columns": 12,
+      "gutter": "28px",
+      "breakpoints": [
+        "760px",
+        "950px",
+        "1100px",
+        "1600px"
+      ],
+      "alignment_tendency": "asymmetric, left aligned"
+    },
+    "shape": {
+      "border_radius": {
+        "small": "3px",
+        "medium": "4px",
+        "large": "4px",
+        "pill": "999px"
+      },
+      "border_usage": "Subtle 1px on functional controls",
+      "divider_style": "1px solid #CBD8DD"
+    },
+    "elevation": {
+      "shadow_style": "Only overlays and floating map controls",
+      "levels": {
+        "low": "0 4px 14px #123d5015",
+        "medium": "0 8px 30px #123d5025",
+        "high": "0 25px 100px #123d5040"
+      },
+      "depth_cues": "Photography and spatial composition"
+    },
+    "iconography": {
+      "style": "Fine outline",
+      "stroke_weight": 1.5,
+      "size_scale": [
+        "15px",
+        "18px",
+        "22px",
+        "25px"
+      ],
+      "preferred_set": "Existing lucide-react"
+    },
+    "motion": {
+      "easing": "ease",
+      "duration_scale": {
+        "micro": "150ms",
+        "normal": "200ms",
+        "macro": null
+      },
+      "entrance_pattern": "none",
+      "exit_pattern": "none",
+      "philosophy": "User-driven navigation and sticky story; no auto-running decorations"
+    },
+    "components": {
+      "button_style": "Solid navy, small radius, descriptive sentence-case text",
+      "input_style": "Light surface, visible border and persistent label",
+      "card_style": "Unboxed photograph and caption",
+      "navigation_pattern": "Fixed light header, current page underline, mobile disclosure",
+      "modal_style": "Accessible Radix dialog, reading column and gallery",
+      "list_style": "Compact map catalogue, asymmetric home selection",
+      "component_notes": "Reuse existing stores, map engine, icons and Radix; no new runtime dependency."
+    }
+  },
+  "design_style": {
+    "aesthetic": {
+      "mood": [
+        "calm",
+        "curious",
+        "welcoming"
+      ],
+      "visual_metaphor": "A window onto the city's living memory",
+      "era_influence": "Contemporary museum exhibition",
+      "genre": "Civic cultural archive",
+      "personality_traits": [
+        "thoughtful",
+        "open",
+        "grounded"
+      ],
+      "adjectives": [
+        "photographic",
+        "spacious",
+        "legible"
+      ]
+    },
+    "visual_language": {
+      "complexity": "moderate",
+      "ornamentation": "Subject-related museum monogram only",
+      "whitespace_usage": "Generous around images and headings",
+      "visual_weight_distribution": "Large typography balanced by real waterfront photography",
+      "focal_strategy": "Single photographic hero",
+      "contrast_level": "high",
+      "texture_usage": "Natural photographic texture"
+    },
+    "composition": {
+      "hierarchy_method": "Type scale and image proportions",
+      "balance_type": "asymmetric",
+      "flow_direction": "Left to right desktop, vertical mobile",
+      "grouping_strategy": "By content role, not repeated enclosing cards",
+      "negative_space_role": "Quiet exhibition space"
+    },
+    "imagery": {
+      "photo_treatment": "Natural colours, intentional crops",
+      "illustration_style": "none",
+      "graphic_elements": "Simple B monogram with architectural linework",
+      "pattern_usage": "none",
+      "image_shape": "Rectangular"
+    },
+    "interaction_feel": {
+      "feedback_style": "Colour, underline, selected state and status text",
+      "hover_behavior": "Underlined headings and restrained surface changes",
+      "transition_personality": "snappy",
+      "loading_style": "Immediate content and stable image fallbacks",
+      "microinteraction_density": "low"
+    },
+    "brand_voice_in_ui": {
+      "tone": "Conversational and specific",
+      "formality": "Respectful civic voice",
+      "cta_style": "Direct invitation",
+      "empty_state_approach": "Explain and offer filter reset",
+      "error_tone": "Concrete and recoverable"
+    }
+  },
+  "visual_effects": {
+    "overview": {
+      "effect_intensity": "subtle-accent",
+      "performance_tier": "lightweight",
+      "fallback_strategy": "Static images and normal document flow",
+      "primary_technology": "CSS"
+    },
+    "background_effects": {
+      "type": "none",
+      "description": "Not part of the proposed design.",
+      "technology": null,
+      "params": {
+        "color_palette": null,
+        "speed": null,
+        "density": null,
+        "opacity": null,
+        "blend_mode": null
+      }
+    },
+    "particle_systems": {
+      "enabled": false,
+      "type": "none",
+      "description": "Not part of the proposed design.",
+      "technology": null,
+      "params": {
+        "count": null,
+        "shape": null,
+        "size_range": null,
+        "movement_pattern": null,
+        "color_behavior": null,
+        "interaction": null,
+        "spawn_area": null
+      }
+    },
+    "3d_elements": {
+      "enabled": true,
+      "type": "map",
+      "description": "Existing interactive MapLibre cultural map retained.",
+      "technology": "MapLibre",
+      "params": {
+        "renderer": "WebGL",
+        "lighting": null,
+        "camera": "Existing map camera",
+        "materials": null,
+        "geometry": "Existing map buildings",
+        "post_processing": null,
+        "interaction_model": "Pan, zoom, map selection"
+      }
+    },
+    "shader_effects": {
+      "enabled": false,
+      "type": "none",
+      "description": "Not part of the proposed design.",
+      "technology": null,
+      "params": {
+        "uniforms": null,
+        "vertex_manipulation": null,
+        "fragment_output": null,
+        "noise_type": null,
+        "distortion": null
+      }
+    },
+    "scroll_effects": {
+      "parallax": {
+        "enabled": false,
+        "layers": null,
+        "depth_range": null,
+        "speed_curve": null
+      },
+      "scroll_triggered_animations": {
+        "enabled": true,
+        "trigger_points": "Home city story",
+        "animation_type": "Sticky image beside two scrolling chapters",
+        "scrub_behavior": "Native CSS sticky, desktop only; no frame sequence"
+      },
+      "scroll_morphing": {
+        "enabled": false,
+        "description": null
+      }
+    },
+    "text_effects": {
+      "type": "none",
+      "description": "Not part of the proposed design.",
+      "technology": null,
+      "params": {
+        "split_strategy": null,
+        "animation_per_unit": null,
+        "stagger": null,
+        "effect_style": null
+      }
+    },
+    "cursor_effects": {
+      "enabled": false,
+      "type": "none",
+      "description": null,
+      "params": {
+        "shape": null,
+        "size": null,
+        "blend_mode": null,
+        "trail": null,
+        "interaction_zone": null
+      }
+    },
+    "image_effects": {
+      "type": "none",
+      "description": "Not part of the proposed design.",
+      "technology": null,
+      "params": {
+        "filter_pipeline": null,
+        "hover_transform": null,
+        "reveal_animation": null,
+        "distortion_type": null
+      }
+    },
+    "glassmorphism_neumorphism": {
+      "enabled": false,
+      "style": "none",
+      "params": {
+        "blur_radius": null,
+        "transparency": null,
+        "border_treatment": null,
+        "shadow_type": null,
+        "light_source_angle": null
+      }
+    },
+    "canvas_drawings": {
+      "enabled": false,
+      "type": "none",
+      "description": "No new canvas sequence; the existing map uses its own rendering.",
+      "technology": null,
+      "params": {
+        "draw_method": null,
+        "animation_loop": null,
+        "color_scheme": null,
+        "responsiveness": null,
+        "interaction": null
+      }
+    },
+    "svg_animations": {
+      "enabled": false,
+      "type": "none",
+      "description": null,
+      "params": {
+        "animation_method": null,
+        "path_morphing": null,
+        "stroke_animation": null,
+        "filter_effects": null
+      }
+    },
+    "composite_notes": "Scrollcraft catalogue pacing adapted to the existing Next.js app using sticky CSS and real photos. No standalone generated frame bundle, no speculative footage. Reduced motion uses static layout; map library preserves its own reduced-motion behavior."
+  }
+}

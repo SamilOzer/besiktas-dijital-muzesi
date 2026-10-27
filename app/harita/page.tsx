@@ -74,6 +74,13 @@ export default function HaritaPage() {
     if (window.innerWidth >= 768) {
       setSidebarOpen(true);
     }
+    const selectFromLink = () => {
+      const id = window.location.hash.slice(1);
+      if (id) setSelectedPinId(id);
+    };
+    selectFromLink();
+    window.addEventListener("hashchange", selectFromLink);
+    return () => window.removeEventListener("hashchange", selectFromLink);
   }, []);
 
   const reloadPins = useCallback(async () => {
@@ -164,13 +171,14 @@ export default function HaritaPage() {
 
   return (
     /* Fixed full-screen layout that starts exactly below the header */
-    <div
+    <main
+      id="main-content"
       className="harita-page-root fixed left-0 right-0 bottom-0 flex"
       style={{ top: "var(--header-h)" }}
     >
       {/* ── Sidebar ─────────────────────────────────── */}
       <aside
-        className="map-sidebar absolute z-20 flex h-full flex-col overflow-hidden border-r border-white/10 bg-[#0b1118] transition-all duration-300 md:relative md:z-auto"
+        className="map-sidebar absolute z-20 flex h-full flex-col overflow-hidden md:relative md:z-auto"
         style={{ width: sidebarOpen ? "min(86vw, 360px)" : "0px" }}
         id="map-filter-sidebar"
         aria-label="Filtreler"
@@ -188,6 +196,8 @@ export default function HaritaPage() {
             onNeighborhoodChange={setSelectedNeighborhood}
             onSearchChange={setSearchQuery}
             onReset={handleReset}
+            pins={filteredPins}
+            onOpenPin={(pin) => { setSelectedPinId(pin.id); setActivePin(pin); }}
           />
         )}
       </aside>
@@ -231,6 +241,6 @@ export default function HaritaPage() {
       {activePin && (
         <LandmarkModal pin={activePin} onClose={() => setActivePin(null)} />
       )}
-    </div>
+    </main>
   );
 }
